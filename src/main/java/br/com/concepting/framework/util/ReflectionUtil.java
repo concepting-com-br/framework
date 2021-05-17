@@ -14,6 +14,7 @@ import org.reflections.scanners.TypeAnnotationsScanner;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+@SuppressWarnings("unchecked")
 public class ReflectionUtil{
     private static Cacher cacher = CacherManager.getInstance().getCacher(ReflectionUtil.class);
     

@@ -406,8 +406,6 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                             
                             if(actionFormClassContent != null && actionFormClassContent.length() > 0)
                                 FileUtil.toTextFile(actionFormClassFilename.toString(), actionFormClassContent, encoding);
-                            
-                            addActionFormMapping(actionFormClassName.toString());
                         }
                     }
                     else{
@@ -417,153 +415,18 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                             try{
                                 actionFormClass = (Class<? extends BaseActionForm<? extends BaseModel>>) Class.forName(actionFormClassName.toString());
                                 
-                                if(!Modifier.isAbstract(actionFormClass.getModifiers())){
+                                if(!Modifier.isAbstract(actionFormClass.getModifiers()))
                                     actionFormClassFile.delete();
-                                    
-                                    removeActionFormMapping(actionFormClassName.toString());
-                                }
                             }
                             catch(ClassNotFoundException e){
                                 actionFormClassFile.delete();
-                                
-                                removeActionFormMapping(actionFormClassName.toString());
                             }
                         }
-                        else
-                            addActionFormMapping(actionFormClassName.toString());
                     }
                 }
             }
         }
         catch(IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e){
-            throw new InternalErrorException(e);
-        }
-    }
-    
-    /**
-     * Adds an action form mapping.
-     *
-     * @param currentActionFormClassName String that contains the action form
-     * class name.
-     * @throws InternalErrorException Occurs when was not possible to execute
-     * the operation.
-     */
-    private void addActionFormMapping(String currentActionFormClassName) throws InternalErrorException{
-        try{
-            if(currentActionFormClassName == null || currentActionFormClassName.length() == 0)
-                return;
-            
-            StringBuilder systemResourcesFilename = new StringBuilder();
-            
-            systemResourcesFilename.append(this.build.getResourcesDirname());
-            systemResourcesFilename.append(FileUtil.getDirectorySeparator());
-            systemResourcesFilename.append(SystemConstants.DEFAULT_RESOURCES_ID);
-            
-            XmlReader reader = new XmlReader(new File(systemResourcesFilename.toString()));
-            XmlNode content = reader.getRoot();
-            XmlNode actionFormsNode = content.getNode(ActionFormConstants.ACTION_FORMS_ATTRIBUTE_ID);
-            List<XmlNode> actionFormNodes = (actionFormsNode != null ? actionFormsNode.getChildren() : null);
-            Boolean found = false;
-            
-            if(actionFormNodes != null && !actionFormNodes.isEmpty()){
-                for(XmlNode actionFormNode: actionFormNodes){
-                    String actionFormClassName = actionFormNode.getAttribute(Constants.CLASS_ATTRIBUTE_ID);
-                    
-                    if(actionFormClassName != null && actionFormClassName.equals(currentActionFormClassName)){
-                        found = true;
-                        
-                        break;
-                    }
-                }
-            }
-            
-            if(!found){
-                XmlNode actionFormNode = new XmlNode(ActionFormConstants.ACTION_FORM_ATTRIBUTE_ID);
-                String currentModelClassName = ActionFormUtil.getModelClassNameByActionForm(currentActionFormClassName);
-                String currentActionFormName = ActionFormUtil.getActionFormIdByModel(currentModelClassName);
-                
-                actionFormNode.addAttribute(Constants.NAME_ATTRIBUTE_ID, currentActionFormName);
-                actionFormNode.addAttribute(Constants.CLASS_ATTRIBUTE_ID, currentActionFormClassName);
-                
-                StringBuilder actionFormUrl = new StringBuilder();
-                String actionFormUrlBuffer = ModelUtil.getUrlByModel(currentModelClassName);
-                
-                actionFormUrl.append("/");
-                actionFormUrl.append(ProjectConstants.DEFAULT_UI_PAGES_DIR);
-                actionFormUrl.append(actionFormUrlBuffer.substring(1));
-                actionFormUrl.append("/");
-                actionFormUrl.append(ProjectConstants.DEFAULT_UI_PAGE_FILE_ID);
-                
-                actionFormNode.addAttribute(ActionFormConstants.ACTION_ATTRIBUTE_ID, actionFormUrlBuffer);
-                
-                XmlNode forwardsNode = new XmlNode(ActionFormConstants.FORWARDS_ATTRIBUTE_ID);
-                XmlNode forwardNode = new XmlNode(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
-                
-                forwardNode.addAttribute(Constants.NAME_ATTRIBUTE_ID, ActionFormConstants.DEFAULT_FORWARD_ID);
-                forwardNode.addAttribute(SystemConstants.URL_ATTRIBUTE_ID, actionFormUrl.toString());
-                
-                forwardsNode.addChild(forwardNode);
-                
-                actionFormNode.addChild(forwardsNode);
-                actionFormsNode.addChild(actionFormNode);
-                
-                XmlWriter writer = new XmlWriter(new File(systemResourcesFilename.toString()));
-                
-                writer.write(content);
-            }
-        }
-        catch(DocumentException | IOException e){
-            throw new InternalErrorException(e);
-        }
-    }
-    
-    /**
-     * Removes the action form mapping.
-     *
-     * @param currentActionFormClassName String that contains the action form
-     * class name.
-     * @throws InternalErrorException Occurs when was not possible to execute
-     * the operation.
-     */
-    private void removeActionFormMapping(String currentActionFormClassName) throws InternalErrorException{
-        try{
-            if(currentActionFormClassName == null || currentActionFormClassName.length() == 0)
-                return;
-            
-            StringBuilder systemResourcesFilename = new StringBuilder();
-            
-            systemResourcesFilename.append(this.build.getResourcesDirname());
-            systemResourcesFilename.append(FileUtil.getDirectorySeparator());
-            systemResourcesFilename.append(SystemConstants.DEFAULT_RESOURCES_ID);
-            
-            XmlReader reader = new XmlReader(new File(systemResourcesFilename.toString()));
-            XmlNode content = reader.getRoot();
-            XmlNode actionFormsNode = content.getNode(ActionFormConstants.ACTION_FORMS_ATTRIBUTE_ID);
-            List<XmlNode> actionFormNodes = (actionFormsNode != null ? actionFormsNode.getChildren() : null);
-            Boolean found = false;
-            
-            if(actionFormNodes != null && !actionFormNodes.isEmpty()){
-                for(int cont = 0; cont < actionFormNodes.size(); cont++){
-                    XmlNode actionFormNode = actionFormNodes.get(cont);
-                    String actionFormClassName = actionFormNode.getAttribute(Constants.CLASS_ATTRIBUTE_ID);
-                    
-                    if(actionFormClassName != null && actionFormClassName.equals(currentActionFormClassName)){
-                        actionFormNodes.remove(cont);
-                        
-                        found = true;
-                        
-                        break;
-                    }
-                }
-                
-                if(found){
-                    XmlWriter writer = new XmlWriter(new File(systemResourcesFilename.toString()));
-                    
-                    writer.write(content);
-                }
-            }
-        }
-        catch(DocumentException | IOException e){
             throw new InternalErrorException(e);
         }
     }
