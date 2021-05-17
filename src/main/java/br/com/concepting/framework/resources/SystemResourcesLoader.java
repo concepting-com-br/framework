@@ -4,9 +4,6 @@ import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.resources.exceptions.InvalidResourcesException;
-import br.com.concepting.framework.resources.helpers.ActionFormForwardResources;
-import br.com.concepting.framework.resources.helpers.ActionFormResources;
-import br.com.concepting.framework.service.constants.ServiceConstants;
 import br.com.concepting.framework.util.LanguageUtil;
 import br.com.concepting.framework.util.PropertyUtil;
 import br.com.concepting.framework.util.helpers.XmlNode;
@@ -67,6 +64,19 @@ public class SystemResourcesLoader extends XmlResourcesLoader<SystemResources>{
         
         resources.setId(Constants.DEFAULT_ATTRIBUTE_ID);
         resources.setDefault(true);
+        
+        XmlNode packagesPrefixNode = resourcesNode.getNode(SystemConstants.PACKAGES_PREFIX_ATTRIBUTE_ID);
+        
+        if(packagesPrefixNode != null){
+            String value = packagesPrefixNode.getValue();
+            
+            if(value != null && value.length() > 0)
+                resources.setPackagesPrefix(value);
+            else
+                throw new InvalidResourcesException(resourcesDirname, resourcesId, packagesPrefixNode.getText());
+        }
+        else
+            throw new InvalidResourcesException(resourcesDirname, resourcesId, resourcesNode.getText());
         
         XmlNode mainConsoleNode = resourcesNode.getNode(SystemConstants.MAIN_CONSOLE_ATTRIBUTE_ID);
         
@@ -157,62 +167,6 @@ public class SystemResourcesLoader extends XmlResourcesLoader<SystemResources>{
         
         resources.setLanguages(languages);
         resources.setDefaultLanguage(defaultLanguage);
-        
-        XmlNode actionFormsNode = resourcesNode.getNode(ActionFormConstants.ACTION_FORMS_ATTRIBUTE_ID);
-        
-        if(actionFormsNode != null){
-            List<XmlNode> actionFormNodes = actionFormsNode.getChildren();
-            
-            if(actionFormNodes != null && !actionFormNodes.isEmpty()){
-                List<XmlNode> forwardNodes = null;
-                XmlNode forwardsNode = null;
-                Collection<ActionFormForwardResources> forwards = null;
-                ActionFormForwardResources forward = null;
-                ActionFormResources actionForm = null;
-                Collection<ActionFormResources> actionForms = PropertyUtil.instantiate(Constants.DEFAULT_LIST_CLASS);
-                
-                for(XmlNode actionFormNode: actionFormNodes){
-                    actionForm = new ActionFormResources();
-                    actionForm.setName(actionFormNode.getAttribute(Constants.NAME_ATTRIBUTE_ID));
-                    actionForm.setClazz(actionFormNode.getAttribute(Constants.CLASS_ATTRIBUTE_ID));
-                    actionForm.setAction(actionFormNode.getAttribute(ActionFormConstants.ACTION_ATTRIBUTE_ID));
-                    
-                    forwardsNode = actionFormNode.getNode(ActionFormConstants.FORWARDS_ATTRIBUTE_ID);
-                    
-                    if(forwardsNode != null){
-                        forwardNodes = forwardsNode.getChildren();
-                        
-                        if(forwardNodes != null && !forwardNodes.isEmpty()){
-                            forwards = PropertyUtil.instantiate(Constants.DEFAULT_LIST_CLASS);
-                            
-                            for(XmlNode forwardNode: forwardNodes){
-                                forward = new ActionFormForwardResources();
-                                forward.setName(forwardNode.getAttribute(Constants.NAME_ATTRIBUTE_ID));
-                                forward.setUrl(forwardNode.getAttribute(SystemConstants.URL_ATTRIBUTE_ID));
-                                
-                                forwards.add(forward);
-                            }
-                            
-                            actionForm.setForwards(forwards);
-                        }
-                    }
-                    
-                    actionForms.add(actionForm);
-                }
-                
-                resources.setActionForms(actionForms);
-            }
-        }
-        
-        XmlNode servicesNode = resourcesNode.getNode(ServiceConstants.SERVICES_ATTRIBUTE_ID);
-        
-        if(servicesNode != null){
-            List<XmlNode> servicesNodes = servicesNode.getChildren();
-            
-            if(servicesNodes != null && servicesNodes.size() > 0)
-                for(XmlNode serviceNode: servicesNodes)
-                    resources.addService(serviceNode.getValue());
-        }
         
         return resources;
     }

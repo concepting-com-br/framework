@@ -1,16 +1,16 @@
 package br.com.concepting.framework.webservice.controller;
 
 import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.resources.SystemResources;
 import br.com.concepting.framework.resources.SystemResourcesLoader;
-import br.com.concepting.framework.service.interfaces.IService;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.reflections.Reflections;
+import org.reflections.scanners.TypeAnnotationsScanner;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.Path;
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * Class that defines the web services listener.
@@ -40,7 +40,6 @@ public class WebServiceListener extends ResourceConfig{
      *
      * @throws InternalErrorException Occurs when was not possible to locate the web services.
      */
-    @SuppressWarnings("unchecked")
     public WebServiceListener() throws InternalErrorException{
         packages("br.com.concepting.framework.webservice.helpers", "com.fasterxml.jackson.jaxrs.json", "org.glassfish.jersey.media.multipart");
         
@@ -48,20 +47,11 @@ public class WebServiceListener extends ResourceConfig{
         
         SystemResourcesLoader loader = new SystemResourcesLoader();
         SystemResources resources = loader.getDefault();
-        Collection<String> services = resources.getServices();
+        Reflections reflections = new Reflections(resources.getPackagesPrefix(), new TypeAnnotationsScanner());
+        Set<Class<?>> servicesClasses = reflections.getTypesAnnotatedWith(Path.class);
         
-        if(services != null && !services.isEmpty()){
-            for(String service: services){
-                try{
-                    Class<? extends IService<? extends BaseModel>> serviceClass = (Class<? extends IService<? extends BaseModel>>) Class.forName(service);
-                    Path pathAnnotation = serviceClass.getAnnotation(Path.class);
-                    
-                    if(pathAnnotation != null)
-                        register(serviceClass);
-                }
-                catch(ClassNotFoundException e){
-                }
-            }
-        }
+        if(servicesClasses != null && !servicesClasses.isEmpty())
+            for(Class<?> serviceClass : servicesClasses)
+                register(serviceClass);
     }
 }

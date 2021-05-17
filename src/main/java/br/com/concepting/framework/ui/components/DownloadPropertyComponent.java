@@ -177,15 +177,10 @@ public class DownloadPropertyComponent extends BasePropertyComponent{
      * icon of the content.
      */
     private void renderDownloadIcon(String contentFilename, ContentType contentType) throws InternalErrorException{
-        ActionFormComponent actionFormComponent = getActionFormComponent();
-        String actionFormName = getActionFormName();
-        String name = getName();
-        
-        if(actionFormComponent == null || contentType == null || actionFormName == null || actionFormName.length() == 0 || name == null || name.length() == 0)
-            return;
-        
         String contextPath = getContextPath();
-        String action = actionFormComponent.getAction();
+        ActionFormController actionFormController = getActionFormController();
+        BaseActionForm<? extends BaseModel> actionFormInstance = actionFormController.getActionFormInstance();
+        String action = actionFormInstance.getAction();
         
         if(contextPath == null || contextPath.length() == 0 || action == null || action.length() == 0)
             return;
@@ -233,11 +228,11 @@ public class DownloadPropertyComponent extends BasePropertyComponent{
         
         StringBuilder contentId = new StringBuilder();
         
-        contentId.append(actionFormName);
+        contentId.append(getActionFormName());
         contentId.append(".");
         contentId.append(ModelConstants.DEFAULT_ID);
         contentId.append(".");
-        contentId.append(name);
+        contentId.append(getName());
         
         print(contentId);
         

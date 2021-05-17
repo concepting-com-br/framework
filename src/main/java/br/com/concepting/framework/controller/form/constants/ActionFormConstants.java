@@ -25,8 +25,6 @@ import br.com.concepting.framework.controller.types.ScopeType;
  */
 @SuppressWarnings("javadoc")
 public abstract class ActionFormConstants{
-    public static final String ACTION_FORMS_ATTRIBUTE_ID = "actionForms";
-    public static final String ACTION_FORM_ATTRIBUTE_ID = "actionForm";
     public static final String ACTION_ATTRIBUTE_ID = "action";
     public static final String DATASET_ATTRIBUTE_ID = "dataset";
     public static final String DATASET_SCOPE_ATTRIBUTE_ID = "datasetScope";

@@ -1,17 +1,19 @@
 package br.com.concepting.framework.security.controller;
 
 import br.com.concepting.framework.constants.SystemConstants;
+import br.com.concepting.framework.controller.BaseFilter;
 import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.form.util.ActionFormUtil;
 import br.com.concepting.framework.controller.helpers.RequestParameterInfo;
 import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.model.*;
+import br.com.concepting.framework.model.FormModel;
+import br.com.concepting.framework.model.SystemModuleModel;
+import br.com.concepting.framework.model.SystemSessionModel;
+import br.com.concepting.framework.model.UrlModel;
 import br.com.concepting.framework.model.exceptions.ItemAlreadyExistsException;
 import br.com.concepting.framework.model.exceptions.ItemNotFoundException;
 import br.com.concepting.framework.processors.ExpressionProcessorUtil;
 import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
-import br.com.concepting.framework.resources.exceptions.InvalidResourcesException;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.exceptions.InvalidMfaTokenException;
 import br.com.concepting.framework.security.exceptions.LoginSessionExpiredException;
@@ -21,21 +23,14 @@ import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
 import br.com.concepting.framework.security.resources.SecurityResources;
-import br.com.concepting.framework.security.resources.SecurityResourcesLoader;
 import br.com.concepting.framework.security.service.interfaces.LoginSessionService;
 import br.com.concepting.framework.service.interfaces.IService;
-import br.com.concepting.framework.service.util.ServiceUtil;
 import br.com.concepting.framework.util.DateTimeUtil;
 import br.com.concepting.framework.util.StringUtil;
 import br.com.concepting.framework.util.helpers.DateTime;
 import br.com.concepting.framework.util.types.DateFieldType;
 
-import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.HttpMethod;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -64,67 +59,8 @@ import java.util.regex.Pattern;
  * along with this program.  If not, see http://www.gnu.org/licenses.</pre>
  */
 @WebFilter(filterName = "securityFilter", urlPatterns = {"*.ui", "*.jsp", "/webServices/*"})
-public class SecurityFilter implements Filter{
-    private SystemResources systemResources = null;
-    private SecurityResources securityResources = null;
-    private SystemController systemController = null;
-    private SecurityController securityController = null;
-    
-    /**
-     * Returns the instance that contains the system resources.
-     *
-     * @return Instance that contains the system resources.
-     */
-    protected SystemResources getSystemResources(){
-        return this.systemResources;
-    }
-    
-    /**
-     * Returns the instance that contains the security resources.
-     *
-     * @return Instance that contains the security resources.
-     */
-    protected SecurityResources getSecurityResources(){
-        return this.securityResources;
-    }
-    
-    /**
-     * Returns the instance of the system controller.
-     *
-     * @return Instance that contains the system controller.
-     */
-    protected SystemController getSystemController(){
-        return this.systemController;
-    }
-    
-    /**
-     * Returns the instance of the security controller.
-     *
-     * @return Instance that contains the security controller.
-     */
-    protected SecurityController getSecurityController(){
-        return this.securityController;
-    }
-    
-    /**
-     * Returns the service implementation of a specific data model.
-     *
-     * @param <S> Class that defines the service implementation.
-     * @param modelClass Class that defines the data model.
-     * @return Instance that contains the service implementation of the data model.
-     * @throws InternalErrorException Occurs when was not possible to
-     * instantiate the service implementation.
-     */
-    protected <S extends IService<? extends BaseModel>> S getService(Class<? extends BaseModel> modelClass) throws InternalErrorException{
-        if(modelClass != null){
-            LoginSessionModel loginSession = this.securityController.getLoginSession();
-            
-            return ServiceUtil.getByModelClass(modelClass, loginSession);
-        }
-        
-        return null;
-    }
-    
+@SuppressWarnings("unchecked")
+public class SecurityFilter extends BaseFilter{
     /**
      * Process the security filter.
      *
@@ -133,24 +69,33 @@ public class SecurityFilter implements Filter{
      * @throws InternalErrorException Occurs when was not possible to process
      * the filter.
      */
-    protected void process() throws UserNotAuthorizedException, PermissionDeniedException, InternalErrorException{
-        if(this.securityController.isLoginSessionExpired()){
-            this.systemController.removeCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
+    protected <L extends LoginSessionModel,
+               U extends UserModel,
+               LP extends LoginParameterModel,
+               F extends FormModel,
+               UL extends UrlModel,
+               SM extends SystemModuleModel,
+               SS extends SystemSessionModel> void process() throws UserNotAuthorizedException, PermissionDeniedException, InternalErrorException{
+        SystemController systemController = getSystemController();
+        SecurityController securityController = getSecurityController();
+        
+        if(securityController.isLoginSessionExpired()){
+            systemController.removeCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
             
             throw new LoginSessionExpiredException();
         }
         
-        LoginSessionModel loginSession = this.securityController.getLoginSession();
-        SystemModuleModel systemModule = loginSession.getSystemModule();
-        Collection<? extends UrlModel> exclusionUrls = systemModule.getExclusionUrls();
-        String requestUri = this.systemController.getRequestURI();
+        L loginSession = securityController.getLoginSession();
+        SM systemModule = loginSession.getSystemModule();
+        Collection<UL> exclusionUrls = (Collection<UL>)systemModule.getExclusionUrls();
+        String requestUri = systemController.getRequestURI();
         
         if(requestUri != null && requestUri.length() > 0){
             StringBuilder requestUriBuffer = new StringBuilder();
             
             requestUriBuffer.append(requestUri);
             
-            Map<String, RequestParameterInfo> requestParameters = this.systemController.getRequestParameters();
+            Map<String, RequestParameterInfo> requestParameters = systemController.getRequestParameters();
             
             if(requestParameters != null && !requestParameters.isEmpty()){
                 requestUriBuffer.append("?");
@@ -183,13 +128,13 @@ public class SecurityFilter implements Filter{
             requestUri = requestUriBuffer.toString();
         }
         
-        requestUri = StringUtil.replaceAll(requestUri, this.systemController.getContextPath(), "");
+        requestUri = StringUtil.replaceAll(requestUri, systemController.getContextPath(), "");
         
-        UserModel user = loginSession.getUser();
+        U user = loginSession.getUser();
         Boolean excludeUrl = false;
         
         if(exclusionUrls != null && !exclusionUrls.isEmpty()){
-            for(UrlModel exclusionUrl: exclusionUrls){
+            for(UL exclusionUrl: exclusionUrls){
                 String urlPattern = StringUtil.toRegex(exclusionUrl.getPath());
                 Pattern regex = Pattern.compile(urlPattern);
                 Matcher matcher = regex.matcher(requestUri);
@@ -202,23 +147,23 @@ public class SecurityFilter implements Filter{
             }
             
             if(!excludeUrl)
-                if(!this.securityController.isLoginSessionAuthenticated())
+                if(!securityController.isLoginSessionAuthenticated())
                     throw new PermissionDeniedException();
         }
         
-        if(this.securityController.isLoginSessionAuthenticated())
+        if(securityController.isLoginSessionAuthenticated())
             if(!user.isSuperUser() && !user.hasPermission(requestUri))
                 throw new PermissionDeniedException();
         
         if(!excludeUrl){
-            LoginParameterModel loginParameter = user.getLoginParameter();
+            LP loginParameter = user.getLoginParameter();
             
             if(loginParameter != null && loginParameter.hasMfa() != null && loginParameter.hasMfa())
                 if(loginParameter.isMfaTokenValidated() == null || !loginParameter.isMfaTokenValidated())
                     throw new InvalidMfaTokenException();
         }
         
-        SystemSessionModel systemSession = loginSession.getSystemSession();
+        SS systemSession = loginSession.getSystemSession();
         String domain = systemSession.getId();
         
         ExpressionProcessorUtil.setVariable(domain, SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID, loginSession);
@@ -233,13 +178,21 @@ public class SecurityFilter implements Filter{
      * the filter.
      */
     @SuppressWarnings("unchecked")
-    protected <L extends LoginSessionModel, U extends UserModel, LP extends LoginParameterModel> void initialize() throws UserNotAuthorizedException, PermissionDeniedException, InternalErrorException{
-        this.securityController = this.systemController.getSecurityController();
-        
-        L loginSession = (this.securityController != null ? this.securityController.getLoginSession() : null);
+    protected <L extends LoginSessionModel,
+               U extends UserModel,
+               LP extends LoginParameterModel,
+               F extends FormModel,
+               UL extends UrlModel,
+               SM extends SystemModuleModel,
+               SS extends SystemSessionModel> void initialize() throws UserNotAuthorizedException, PermissionDeniedException, InternalErrorException{
+        SystemController systemController = getSystemController();
+        SystemResources systemResources = getSystemResources();
+        SecurityController securityController = getSecurityController();
+        SecurityResources securityResources = getSecurityResources();
+        L loginSession = (securityController != null ? securityController.getLoginSession() : null);
         
         if(loginSession != null){
-            Boolean isWebServicesRequest = (this.systemController != null ? this.systemController.isWebServicesRequest() : null);
+            Boolean isWebServicesRequest = (systemController != null ? systemController.isWebServicesRequest() : null);
             
             if(isWebServicesRequest != null && isWebServicesRequest){
                 if(loginSession.getId() != null && loginSession.getId().length() > 0){
@@ -260,7 +213,7 @@ public class SecurityFilter implements Filter{
                                 throw new ItemNotFoundException();
                         }
                         catch(ItemNotFoundException e1){
-                            this.systemController.removeCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
+                            systemController.removeCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
                             
                             throw new PermissionDeniedException();
                         }
@@ -270,20 +223,20 @@ public class SecurityFilter implements Filter{
                     DateTime startDateTime = loginSession.getStartDateTime();
                     Long ttl = DateTimeUtil.diff(now, startDateTime, DateFieldType.MINUTES);
                     
-                    if(this.securityResources.getLoginSessionTimeout() == null || ttl >= this.securityResources.getLoginSessionTimeout()){
+                    if(securityResources.getLoginSessionTimeout() == null || ttl >= securityResources.getLoginSessionTimeout()){
                         if(loginSessionService != null)
                             loginSessionService.logOut();
                         
-                        this.systemController.removeCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
+                        systemController.removeCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
                         
                         throw new LoginSessionExpiredException();
                     }
                 }
             }
             
-            SystemModuleModel systemModule = loginSession.getSystemModule();
-            Class<SystemModuleModel> modelClass = (Class<SystemModuleModel>) systemModule.getClass();
-            IService<SystemModuleModel> systemModuleService = null;
+            SM systemModule = loginSession.getSystemModule();
+            Class<SM> modelClass = (Class<SM>) systemModule.getClass();
+            IService<SM> systemModuleService = null;
             
             try{
                 systemModuleService = getService(modelClass);
@@ -308,11 +261,11 @@ public class SecurityFilter implements Filter{
             if(isWebServicesRequest == null || !isWebServicesRequest){
                 systemModule = systemModuleService.loadReference(systemModule, SystemConstants.FORMS_ATTRIBUTE_ID);
                 
-                FormModel form = systemModule.getForm(ActionFormUtil.getActionFormIdByModel(this.systemResources.getMainConsoleClass()));
+                F form = systemModule.getForm(ActionFormUtil.getActionFormIdByModel(systemResources.getMainConsoleClass()));
                 
                 if(form != null){
-                    Class<FormModel> formClass = (Class<FormModel>) form.getClass();
-                    IService<FormModel> formService = getService(formClass);
+                    Class<F> formClass = (Class<F>) form.getClass();
+                    IService<F> formService = getService(formClass);
                     
                     form = formService.loadReference(form, SystemConstants.OBJECTS_ATTRIBUTE_ID);
                     
@@ -322,14 +275,14 @@ public class SecurityFilter implements Filter{
             
             loginSession.setSystemModule(systemModule);
             
-            SystemSessionModel systemSession = loginSession.getSystemSession();
+            SS systemSession = loginSession.getSystemSession();
             
             if(systemSession != null && systemSession.getId() != null && systemSession.getId().length() > 0){
                 if(systemSession.getStartDateTime() == null){
                     systemSession.setStartDateTime(new DateTime());
                     
-                    Class<SystemSessionModel> systemSessionClass = (Class<SystemSessionModel>) systemSession.getClass();
-                    IService<SystemSessionModel> systemSessionService = null;
+                    Class<SS> systemSessionClass = (Class<SS>) systemSession.getClass();
+                    IService<SS> systemSessionService = null;
                     
                     try{
                         systemSessionService = getService(systemSessionClass);
@@ -351,59 +304,9 @@ public class SecurityFilter implements Filter{
             else
                 throw new PermissionDeniedException();
             
-            this.securityController.setLoginSession(loginSession);
+            securityController.setLoginSession(loginSession);
         }
         else
             throw new PermissionDeniedException();
-    }
-    
-    /**
-     * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse, javax.servlet.FilterChain)
-     */
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain filterChain) throws IOException, ServletException{
-        ((HttpServletResponse) response).setHeader("Access-Control-Allow-Origin", "*");
-        ((HttpServletResponse) response).setHeader("Access-Control-Allow-Methods", "HEAD, DELETE, PUT, POST, GET, OPTIONS");
-        ((HttpServletResponse) response).setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, ".concat(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID));
-        
-        if(((HttpServletRequest) request).getMethod().equals(HttpMethod.OPTIONS))
-            filterChain.doFilter(request, response);
-        else{
-            this.systemController = new SystemController((HttpServletRequest) request, (HttpServletResponse) response);
-            this.systemController.setCurrentException(null);
-            
-            try{
-                initialize();
-                process();
-                
-                filterChain.doFilter(request, response);
-            }
-            catch(UserNotAuthorizedException | PermissionDeniedException | InternalErrorException e){
-                this.systemController.forward(e);
-            }
-        }
-    }
-    
-    /**
-     * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
-     */
-    public void init(FilterConfig filterConfig) throws ServletException{
-        try{
-            SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader();
-            
-            this.systemResources = systemResourcesLoader.getDefault();
-            
-            SecurityResourcesLoader securityResourcesLoader = new SecurityResourcesLoader();
-            
-            this.securityResources = securityResourcesLoader.getDefault();
-        }
-        catch(InvalidResourcesException e){
-            this.systemController.forward(e);
-        }
-    }
-    
-    /**
-     * @see javax.servlet.Filter#destroy()
-     */
-    public void destroy(){
     }
 }

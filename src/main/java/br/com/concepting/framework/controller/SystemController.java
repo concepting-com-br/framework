@@ -19,6 +19,7 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.PageContext;
 import javax.ws.rs.core.Response;
 
+import br.com.concepting.framework.controller.form.annotations.ActionForm;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -65,16 +66,13 @@ import br.com.concepting.framework.webservice.constants.WebServiceConstants;
  * along with this program.  If not, see http://www.gnu.org/licenses.</pre>
  */
 public class SystemController{
-	private PageContext                       pageContext          = null;
-	private HttpServletRequest                request              = null;
-	private HttpServletResponse               response             = null;
-	private Map<String, RequestParameterInfo> requestParameters    = null;
-	private Collection<Cookie>                cookies              = null;
-	private HttpSession                       session              = null;
-	private Boolean                           hasOutputContent     = null;
-	private ActionFormController              actionFormController = null;
-	private SecurityController                securityController   = null;
-	private UIController                      uiController         = null;
+	private PageContext                       pageContext       = null;
+	private HttpServletRequest                request           = null;
+	private HttpServletResponse               response          = null;
+	private Map<String, RequestParameterInfo> requestParameters = null;
+	private Collection<Cookie>                cookies           = null;
+	private HttpSession                       session           = null;
+	private Boolean                           hasOutputContent  = null;
 
 	/**
 	 * Constructor - Initialize the controller.
@@ -123,10 +121,6 @@ public class SystemController{
 		loadSession();
 		loadEncoding();
 		loadRequestParameters();
-
-		this.actionFormController = new ActionFormController(this);
-		this.securityController = new SecurityController(this);
-		this.uiController = new UIController(this);
 	}
 	
 	/**
@@ -445,42 +439,17 @@ public class SystemController{
 		return false;
 	}
 
+	public ActionFormController getActionFormController(String name){
+		return new ActionFormController(this, name);
+	}
+	
 	/**
 	 * Returns the form controller instance.
-	 * 
+	 *
 	 * @return Instance that contains the form controller.
 	 */
 	public ActionFormController getActionFormController(){
-		return this.actionFormController;
-	}
-
-	/**
-	 * Returns the form controller of a specific form.
-	 *
-	 * @param <F> Class that defines the form.
-	 * @param actionForm Instance that contains the form.
-	 * @return Instance that contains the form controller.
-	 */
-	public <F extends BaseActionForm<? extends BaseModel>> ActionFormController getActionFormController(F actionForm){
-		String name = (actionForm != null ? actionForm.getName() : null);
-
-		if(name != null && name.length() > 0)
-			return getActionFormController(name);
-
-		return null;
-	}
-
-	/**
-	 * Returns the form controller of a specific form.
-	 *
-	 * @param actionFormName String that contains the identifier of the form.
-	 * @return Instance that contains the form controller.
-	 */
-	public ActionFormController getActionFormController(String actionFormName){
-		if(this.actionFormController != null)
-			this.actionFormController.setActionFormName(actionFormName);
-
-		return this.actionFormController;
+		return new ActionFormController(this);
 	}
 
 	/**
@@ -489,7 +458,7 @@ public class SystemController{
 	 * @return Instance that contains the security controller.
 	 */
 	public SecurityController getSecurityController(){
-		return this.securityController;
+		return new SecurityController(this);
 	}
 
 	/**
@@ -498,7 +467,7 @@ public class SystemController{
 	 * @return Instance that contains the UI controller.
 	 */
 	public UIController getUIController(){
-		return this.uiController;
+		return new UIController(this);
 	}
 
 	/**

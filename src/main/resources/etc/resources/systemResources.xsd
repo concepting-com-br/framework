@@ -4,6 +4,7 @@
  	<xs:element name="resources">
 		<xs:complexType>
 			<xs:sequence>
+				<xs:element type="xs:string" name="packagesPrefix" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="mainConsole" minOccurs="1" maxOccurs="1">
 					<xs:complexType>
 						<xs:sequence>
@@ -71,13 +72,6 @@
 									<xs:attribute type="xs:string" name="class" use="required"/>
 								</xs:complexType>
 							</xs:element>
-						</xs:sequence>
-					</xs:complexType>
-				</xs:element>
-				<xs:element name="services" minOccurs="0" maxOccurs="1">
-					<xs:complexType>
-						<xs:sequence>
-							<xs:element type="xs:string" name="service" minOccurs="0" maxOccurs="unbounded"/>
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>

@@ -1,9 +1,6 @@
 package br.com.concepting.framework.resources;
 
-import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.model.MainConsoleModel;
-import br.com.concepting.framework.resources.helpers.ActionFormResources;
-import br.com.concepting.framework.util.PropertyUtil;
 import br.com.concepting.framework.util.helpers.XmlNode;
 
 import java.util.Collection;
@@ -33,64 +30,19 @@ import java.util.Locale;
 public class SystemResources extends BaseResources<XmlNode>{
     private static final long serialVersionUID = -1115220620296191917L;
     
+    private String packagesPrefix = null;
     private Class<? extends MainConsoleModel> mainConsoleClass = null;
     private Collection<Locale> languages = null;
     private Locale defaultLanguage = null;
     private Collection<String> skins = null;
     private String defaultSkin = null;
-    private Collection<ActionFormResources> actionForms = null;
-    private Collection<String> services = null;
     
-    /**
-     * Returns the system available services.
-     *
-     * @return List that contains the system available services.
-     */
-    public Collection<String> getServices(){
-        return this.services;
+    public String getPackagesPrefix(){
+        return this.packagesPrefix;
     }
     
-    /**
-     * Defines the system available services.
-     *
-     * @param services List that contains the system available services.
-     */
-    public void setServices(Collection<String> services){
-        this.services = services;
-    }
-    
-    /**
-     * Adds a service implementation.
-     *
-     * @param service String that contain the identifier of the service implementation.
-     */
-    public void addService(String service){
-        if(service != null && service.length() > 0){
-            if(this.services == null)
-                this.services = PropertyUtil.instantiate(Constants.DEFAULT_LIST_CLASS);
-            
-            this.services.add(service);
-        }
-    }
-    
-    /**
-     * Returns the list that contains the action forms.
-     *
-     * @param <C> Class that defines the list of action forms.
-     * @return Instance that contains the action forms.
-     */
-    @SuppressWarnings("unchecked")
-    public <C extends Collection<ActionFormResources>> C getActionForms(){
-        return (C) this.actionForms;
-    }
-    
-    /**
-     * Defines the list that contains the action forms.
-     *
-     * @param actionForms Instance that contains the action forms.
-     */
-    public void setActionForms(Collection<ActionFormResources> actionForms){
-        this.actionForms = actionForms;
+    public void setPackagesPrefix(String packagesPrefix){
+        this.packagesPrefix = packagesPrefix;
     }
     
     /**

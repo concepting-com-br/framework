@@ -12,6 +12,8 @@ import br.com.concepting.framework.persistence.constants.PersistenceConstants;
 import br.com.concepting.framework.persistence.resources.PersistenceResources;
 import br.com.concepting.framework.persistence.types.RepositoryType;
 import br.com.concepting.framework.resources.FactoryResources;
+import br.com.concepting.framework.resources.SystemResources;
+import br.com.concepting.framework.resources.SystemResourcesLoader;
 import br.com.concepting.framework.util.PropertyUtil;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.hibernate.Cache;
@@ -23,6 +25,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.*;
 import org.hibernate.jdbc.Work;
+import org.reflections.Reflections;
+import org.reflections.scanners.TypeAnnotationsScanner;
 
 import java.io.InputStream;
 import java.sql.Connection;
@@ -241,6 +245,8 @@ public class HibernateUtil{
      * the connection.
      */
     private static SessionFactory buildSessionFactory(PersistenceResources persistenceResources) throws InternalErrorException{
+        SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader();
+        SystemResources systemResources = systemResourcesLoader.getDefault();
         Cacher<SessionFactory> cacher = CacherManager.getInstance().getCacher(HibernateUtil.class);
         CachedObject<SessionFactory> object = null;
         SessionFactory sessionFactory = null;

@@ -103,6 +103,7 @@ dependencies{
 	compile "org.apache.poi:poi:4.1.2"
 	compile "org.apache.poi:poi-ooxml:4.1.2"
 	compile "com.sun.mail:pop3:1.6.5"
+	compile "org.reflections:reflections:0.9.12"
 	compile "com.wcohen:com.wcohen.secondstring:0.1"
 	compile "org.seleniumhq.selenium:selenium-api:3.141.59"
 	compile "org.seleniumhq.selenium:selenium-chrome-driver:3.141.59"

@@ -1319,8 +1319,6 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                             
                             if(serviceClassContent != null && serviceClassContent.length() > 0)
                                 FileUtil.toTextFile(serviceClassFilename.toString(), serviceClassContent, encoding);
-                            
-                            addServiceMapping(serviceClassName.toString());
                         }
                     }
                     else{
@@ -1330,20 +1328,13 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                             try{
                                 serviceClass = (Class<? extends IService<? extends BaseModel>>) Class.forName(serviceClassName.toString());
                                 
-                                if(!Modifier.isAbstract(serviceClass.getModifiers())){
+                                if(!Modifier.isAbstract(serviceClass.getModifiers()))
                                     serviceClassFile.delete();
-                                    
-                                    removeServiceMapping(serviceClassName.toString());
-                                }
                             }
                             catch(ClassNotFoundException e){
                                 serviceClassFile.delete();
-                                
-                                removeServiceMapping(serviceClassName.toString());
                             }
                         }
-                        else
-                            addServiceMapping(serviceClassName.toString());
                     }
                 }
             }
@@ -1547,11 +1538,8 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                             GenericProcessor processor = processorFactory.getProcessor(this.modelInfo, webServiceClassTemplateArtifactNode);
                             String webServiceClassContent = StringUtil.indent(processor.process(), JavaIndent.getRules());
                             
-                            if(webServiceClassContent != null && webServiceClassContent.length() > 0){
+                            if(webServiceClassContent != null && webServiceClassContent.length() > 0)
                                 FileUtil.toTextFile(webServiceClassFilename.toString(), webServiceClassContent, encoding);
-                                
-                                addServiceMapping(webServiceClassName.toString());
-                            }
                         }
                     }
                     else{
@@ -1561,20 +1549,13 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                             try{
                                 webServiceClass = (Class<? extends IService<? extends BaseModel>>) Class.forName(webServiceClassName.toString());
                                 
-                                if(!Modifier.isAbstract(webServiceClass.getModifiers())){
+                                if(!Modifier.isAbstract(webServiceClass.getModifiers()))
                                     webServiceClassFile.delete();
-                                    
-                                    removeServiceMapping(webServiceClassName.toString());
-                                }
                             }
                             catch(ClassNotFoundException e){
                                 webServiceClassFile.delete();
-                                
-                                removeServiceMapping(webServiceClassName.toString());
                             }
                         }
-                        else
-                            addServiceMapping(webServiceClassName.toString());
                     }
                 }
             }
@@ -2110,110 +2091,6 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
             catch(IOException | DocumentException e){
                 throw new InternalErrorException(e);
             }
-        }
-    }
-    
-    /**
-     * Adds a service mapping.
-     *
-     * @param currentServiceClassName String that contains the service implementation class name.
-     * @throws InternalErrorException Occurs when was not possible to execute the operation.
-     */
-    private void addServiceMapping(String currentServiceClassName) throws InternalErrorException{
-        if(this.modelInfo == null)
-            return;
-        
-        try{
-            StringBuilder systemResourcesFilename = new StringBuilder();
-            
-            systemResourcesFilename.append(ProjectConstants.DEFAULT_RESOURCES_DIR);
-            systemResourcesFilename.append(SystemConstants.DEFAULT_RESOURCES_ID);
-            
-            XmlReader reader = new XmlReader(new File(systemResourcesFilename.toString()));
-            XmlNode systemResourceContentNode = reader.getRoot();
-            XmlNode servicesNode = systemResourceContentNode.getNode(ServiceConstants.SERVICES_ATTRIBUTE_ID);
-            
-            if(servicesNode == null){
-                servicesNode = new XmlNode(ServiceConstants.SERVICES_ATTRIBUTE_ID);
-                
-                systemResourceContentNode.addChild(servicesNode);
-            }
-            
-            List<XmlNode> servicesNodes = servicesNode.getChildren();
-            Boolean found = false;
-            
-            if(servicesNodes != null && !servicesNodes.isEmpty()){
-                for(int cont = 0; cont < servicesNodes.size(); cont++){
-                    XmlNode serviceNode = servicesNodes.get(cont);
-                    String serviceClassName = serviceNode.getValue();
-                    
-                    if(serviceClassName != null && serviceClassName.equals(currentServiceClassName)){
-                        found = true;
-                        
-                        break;
-                    }
-                }
-            }
-            
-            if(!found){
-                servicesNode.addChild(new XmlNode(ServiceConstants.SERVICE_ATTRIBUTE_ID, currentServiceClassName));
-                
-                XmlWriter writer = new XmlWriter(new File(systemResourcesFilename.toString()));
-                
-                writer.write(systemResourceContentNode);
-            }
-        }
-        catch(IOException | DocumentException e){
-            throw new InternalErrorException(e);
-        }
-    }
-    
-    /**
-     * Removes a service mapping.
-     *
-     * @param currentServiceClassName String that contains the service implementation class name.
-     * @throws InternalErrorException Occurs when was not possible to execute the operation.
-     */
-    private void removeServiceMapping(String currentServiceClassName) throws InternalErrorException{
-        if(this.modelInfo == null)
-            return;
-        
-        try{
-            StringBuilder systemResourcesFilename = new StringBuilder();
-            
-            systemResourcesFilename.append(ProjectConstants.DEFAULT_RESOURCES_DIR);
-            systemResourcesFilename.append(SystemConstants.DEFAULT_RESOURCES_ID);
-            
-            XmlReader reader = new XmlReader(new File(systemResourcesFilename.toString()));
-            XmlNode systemResourceContentNode = reader.getRoot();
-            
-            XmlNode servicesNode = systemResourceContentNode.getNode(ServiceConstants.SERVICES_ATTRIBUTE_ID);
-            List<XmlNode> servicesNodes = (servicesNode != null ? servicesNode.getChildren() : null);
-            Boolean found = false;
-            
-            if(servicesNodes != null && !servicesNodes.isEmpty()){
-                for(int cont = 0; cont < servicesNodes.size(); cont++){
-                    XmlNode serviceNode = servicesNodes.get(cont);
-                    String serviceClassName = serviceNode.getValue();
-                    
-                    if(serviceClassName != null && serviceClassName.equals(currentServiceClassName)){
-                        servicesNodes.remove(cont);
-                        
-                        found = true;
-                        
-                        break;
-                    }
-                }
-                
-                if(found){
-                    XmlWriter writer = new XmlWriter(new File(systemResourcesFilename.toString()));
-                    
-                    writer.write(systemResourceContentNode);
-                }
-            }
-        }
-        catch(IOException | DocumentException e){
-            throw new InternalErrorException(e);
         }
     }
     

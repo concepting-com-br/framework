@@ -4,6 +4,9 @@ import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.action.BaseAction;
 import br.com.concepting.framework.controller.action.types.ActionType;
+import br.com.concepting.framework.controller.form.annotations.ActionForm;
+import br.com.concepting.framework.controller.form.annotations.Forward;
+import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.controller.form.helpers.ActionFormMessage;
 import br.com.concepting.framework.controller.form.types.ActionFormMessageType;
 import br.com.concepting.framework.controller.form.util.ActionFormPopulator;
@@ -13,7 +16,6 @@ import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.helpers.ModelInfo;
 import br.com.concepting.framework.model.util.ModelUtil;
-import br.com.concepting.framework.resources.helpers.ActionFormForwardResources;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.exceptions.PermissionDeniedException;
 import br.com.concepting.framework.security.model.LoginSessionModel;
@@ -49,11 +51,11 @@ import java.util.List;
  * @author fvilarinho
  * @since 1.0.0
  */
+@ActionForm
 public abstract class BaseActionForm<M extends BaseModel> implements Serializable{
     private static final long serialVersionUID = -4308647670235033678L;
     
     private List<String> actionsHistory = null;
-    private String name = null;
     private String action = null;
     private String forward = null;
     private String updateViews = null;
@@ -208,24 +210,6 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
     }
     
     /**
-     * Returns the identifier of the form.
-     *
-     * @return String that contains the identifier.
-     */
-    public String getName(){
-        return this.name;
-    }
-    
-    /**
-     * Defines the identifier of the form.
-     *
-     * @param name String that contains the identifier.
-     */
-    public void setName(String name){
-        this.name = name;
-    }
-    
-    /**
      * Returns the identifier of the current action.
      *
      * @return String that contains the identifier.
@@ -338,6 +322,32 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
     }
     
     /**
+     * Finds the forward of the action form.
+     *
+     * @return Instance that contains the forward of the action form.
+     * @throws InternalErrorException Occurs when was not possible to execute
+     * the operation.
+     */
+    private Forward findForward() throws InternalErrorException{
+        if(this.forward == null || this.forward.length() == 0)
+            this.forward = ActionFormConstants.DEFAULT_FORWARD_ID;
+        
+        ActionForm form = getClass().getAnnotation(ActionForm.class);
+        Forward[] forwards = form.forwards();
+        Forward defaultForward = null;
+        
+        for(Forward forward : forwards){
+            if(forward.isDefault())
+                defaultForward = forward;
+            
+            if(forward.name().equals(this.forward))
+                return forward;
+        }
+        
+        return defaultForward;
+    }
+    
+    /**
      * Process the action form request.
      *
      * @param systemController Instance that contains the system controller.
@@ -347,10 +357,10 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
      * @throws Throwable Occurs when was not possible to execution the operation.
      */
     @SuppressWarnings("unchecked")
-    public void processRequest(SystemController systemController, ActionFormController actionFormController, SecurityController securityController) throws Throwable{
+    public <L extends LoginSessionModel, U extends UserModel> void processRequest(SystemController systemController, ActionFormController actionFormController, SecurityController securityController) throws Throwable{
         if(systemController == null || actionFormController == null || securityController == null)
             return;
-        
+    
         String url = null;
         
         try{
@@ -358,13 +368,13 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
             
             actionFormPopulator.populateActionForm();
             
-            ActionFormForwardResources actionFormForward = actionFormController.findForward();
+            Forward forward = findForward();
             
-            url = (actionFormForward != null ? actionFormForward.getUrl() : "/");
+            url = (forward != null ? forward.url() : "/");
             
             if(securityController.isLoginSessionAuthenticated()){
-                LoginSessionModel loginSession = securityController.getLoginSession();
-                UserModel user = loginSession.getUser();
+                L loginSession = securityController.getLoginSession();
+                U user = loginSession.getUser();
                 
                 if(!user.isSuperUser() && !user.hasPermission(url))
                     throw new PermissionDeniedException();
@@ -390,11 +400,13 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
                 
                 if(actionClass != null){
                     BaseAction<M> actionInstance = ConstructorUtils.invokeConstructor(actionClass, null);
+                    Forward methodForward = actionInstance.processRequest(this, systemController, actionFormController, securityController);
                     
-                    actionInstance.processRequest(this, systemController, actionFormController, securityController);
+                    if(methodForward != null)
+                        url = (methodForward != null ? methodForward.url() : "/");
                 }
             }
-            
+    
             Collection<ActionFormMessage> actionFormMessages = actionFormController.getMessages(ActionFormMessageType.VALIDATION);
             
             if(actionFormMessages == null || actionFormMessages.isEmpty())

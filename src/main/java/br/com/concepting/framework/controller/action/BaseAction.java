@@ -4,6 +4,8 @@ import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.form.ActionFormController;
 import br.com.concepting.framework.controller.form.BaseActionForm;
+import br.com.concepting.framework.controller.form.annotations.ActionForm;
+import br.com.concepting.framework.controller.form.annotations.Forward;
 import br.com.concepting.framework.controller.form.util.ActionFormUtil;
 import br.com.concepting.framework.controller.types.ScopeType;
 import br.com.concepting.framework.exceptions.InternalErrorException;
@@ -22,6 +24,7 @@ import org.apache.commons.beanutils.ConstructorUtils;
 import org.apache.commons.beanutils.MethodUtils;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 /**
  * Class that defines the basic implementation of the actions of a form.
@@ -181,12 +184,10 @@ public abstract class BaseAction<M extends BaseModel>{
         if(this.actionForm == null)
             return;
         
-        String name = this.actionForm.getName();
         String action = this.actionForm.getAction();
         
         PropertyUtil.clearAllProperties(this.actionForm);
         
-        this.actionForm.setName(name);
         this.actionForm.setAction(action);
     }
     
@@ -204,7 +205,8 @@ public abstract class BaseAction<M extends BaseModel>{
         try{
             LoginSessionModel loginSession = this.securityController.getLoginSession();
             SystemModuleModel systemModule = (loginSession != null ? loginSession.getSystemModule() : null);
-            FormModel form = (systemModule != null ? systemModule.getForm(this.actionForm.getName()) : null);
+            ActionForm actionForm = this.actionForm.getClass().getAnnotation(ActionForm.class);
+            FormModel form = (systemModule != null ? systemModule.getForm(actionForm.name()) : null);
             
             if(form != null){
                 Class<FormModel> formClass = (Class<FormModel>) form.getClass();
@@ -295,9 +297,9 @@ public abstract class BaseAction<M extends BaseModel>{
      * @throws Throwable Occurs when was not possible to execution the
      * operation.
      */
-    public void processRequest(BaseActionForm<M> actionForm, SystemController systemController, ActionFormController actionFormController, SecurityController securityController) throws Throwable{
+    public Forward processRequest(BaseActionForm<M> actionForm, SystemController systemController, ActionFormController actionFormController, SecurityController securityController) throws Throwable{
         if(actionForm == null || systemController == null || actionFormController == null || securityController == null)
-            return;
+            return null;
         
         this.actionForm = actionForm;
         this.systemController = systemController;
@@ -307,8 +309,16 @@ public abstract class BaseAction<M extends BaseModel>{
         try{
             String action = this.actionForm.getAction();
             
-            if(action != null && action.length() > 0)
-                MethodUtils.invokeMethod(this, action, null);
+            if(action != null && action.length() > 0){
+                Method method = getClass().getMethod(action);
+                Forward forward = method.getAnnotation(Forward.class);
+                
+                method.invoke(this);
+                
+                return forward;
+            }
+            
+            return null;
         }
         catch(Throwable e){
             if(e instanceof NoSuchMethodException)

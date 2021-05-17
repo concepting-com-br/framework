@@ -1,16 +1,9 @@
 package br.com.concepting.framework.controller.form;
 
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URLDecoder;
-import java.text.ParseException;
-import java.util.Collection;
-
-import org.apache.commons.beanutils.ConstructorUtils;
-
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.constants.ProjectConstants;
 import br.com.concepting.framework.controller.SystemController;
+import br.com.concepting.framework.controller.form.annotations.ActionForm;
 import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.controller.form.constants.ActionFormMessageConstants;
 import br.com.concepting.framework.controller.form.helpers.ActionFormMessage;
@@ -22,16 +15,21 @@ import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.constants.ModelConstants;
 import br.com.concepting.framework.model.types.ConditionType;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
-import br.com.concepting.framework.resources.helpers.ActionFormForwardResources;
-import br.com.concepting.framework.resources.helpers.ActionFormResources;
 import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.util.NumberUtil;
 import br.com.concepting.framework.util.PropertyUtil;
+import br.com.concepting.framework.util.ReflectionUtil;
 import br.com.concepting.framework.util.StringUtil;
 import br.com.concepting.framework.util.types.ByteMetricType;
 import br.com.concepting.framework.util.types.ContentType;
+import org.apache.commons.beanutils.ConstructorUtils;
+
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URLDecoder;
+import java.text.ParseException;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Class that defines the form controller.
@@ -58,116 +56,16 @@ public class ActionFormController{
     private String actionFormName = null;
     private SystemController systemController = null;
     
-    /**
-     * Constructor - Initialize the controller.
-     *
-     * @param systemController Instance that contains the system controller.
-     */
     public ActionFormController(SystemController systemController){
         super();
         
         this.systemController = systemController;
     }
-    
-    /**
-     * Defines the identifier of the form.
-     *
-     * @param actionFormName String that contains the identifier of the form.
-     */
-    public void setActionFormName(String actionFormName){
+
+    public ActionFormController(SystemController systemController, String actionFormName){
+        this(systemController);
+        
         this.actionFormName = actionFormName;
-    }
-    
-    /**
-     * Returns the instance of the form by its name.
-     *
-     * @param name String that contains the identifier of the form.
-     * @return Instance that contains the form.
-     * @throws InternalErrorException Occurs when was not possible to execute the operation.
-     */
-    @SuppressWarnings("unchecked")
-    public BaseActionForm<? extends BaseModel> getActionFormInstanceByName(String name) throws InternalErrorException{
-        BaseActionForm<? extends BaseModel> actionFormInstance = null;
-        
-        if(name != null && name.length() > 0){
-            actionFormInstance = this.systemController.getAttribute(name, ScopeType.SESSION);
-            
-            if(actionFormInstance == null){
-                try{
-                    SystemResourcesLoader loader = new SystemResourcesLoader();
-                    SystemResources systemResources = loader.getDefault();
-                    Collection<ActionFormResources> actionFormsResources = (systemResources != null ? systemResources.getActionForms() : null);
-                    
-                    if(actionFormsResources != null && !actionFormsResources.isEmpty()){
-                        for(ActionFormResources actionFormResources: actionFormsResources){
-                            if(name.equals(actionFormResources.getName())){
-                                this.actionFormName = name;
-                                
-                                Class<? extends BaseActionForm<? extends BaseModel>> actionFormClass = (Class<? extends BaseActionForm<? extends BaseModel>>) Class.forName(actionFormResources.getClazz());
-                                
-                                actionFormInstance = ConstructorUtils.invokeConstructor(actionFormClass, null);
-                                actionFormInstance.setName(this.actionFormName);
-                                
-                                this.systemController.setAttribute(this.actionFormName, actionFormInstance, ScopeType.SESSION);
-                                
-                                return actionFormInstance;
-                            }
-                        }
-                    }
-                }
-                catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | ClassNotFoundException e){
-                    throw new InternalErrorException(e);
-                }
-            }
-        }
-        
-        return actionFormInstance;
-    }
-    
-    /**
-     * Returns the instance of the form by its action URL.
-     *
-     * @param action String that contains the action URL of the form.
-     * @return Instance that contains the form.
-     * @throws InternalErrorException Occurs when was not possible to execute the operation.
-     */
-    @SuppressWarnings("unchecked")
-    public BaseActionForm<? extends BaseModel> getActionFormInstanceByAction(String action) throws InternalErrorException{
-        BaseActionForm<? extends BaseModel> actionFormInstance = null;
-        
-        if(action != null && action.length() > 0){
-            try{
-                SystemResourcesLoader loader = new SystemResourcesLoader();
-                SystemResources systemResources = loader.getDefault();
-                Collection<ActionFormResources> actionFormsResources = (systemResources != null ? systemResources.getActionForms() : null);
-                
-                if(actionFormsResources != null && !actionFormsResources.isEmpty()){
-                    for(ActionFormResources actionFormResources: actionFormsResources){
-                        if(action.equals(actionFormResources.getAction())){
-                            this.actionFormName = actionFormResources.getName();
-                            
-                            actionFormInstance = this.systemController.getAttribute(this.actionFormName, ScopeType.SESSION);
-                            
-                            if(actionFormInstance == null){
-                                Class<? extends BaseActionForm<? extends BaseModel>> actionFormClass = (Class<? extends BaseActionForm<? extends BaseModel>>) Class.forName(actionFormResources.getClazz());
-                                
-                                actionFormInstance = ConstructorUtils.invokeConstructor(actionFormClass, null);
-                                actionFormInstance.setName(this.actionFormName);
-                                
-                                this.systemController.setAttribute(this.actionFormName, actionFormInstance, ScopeType.SESSION);
-                            }
-                            
-                            return actionFormInstance;
-                        }
-                    }
-                }
-            }
-            catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException | ClassNotFoundException e){
-                throw new InternalErrorException(e);
-            }
-        }
-        
-        return actionFormInstance;
     }
     
     /**
@@ -179,26 +77,76 @@ public class ActionFormController{
     public BaseActionForm<? extends BaseModel> getActionFormInstance() throws InternalErrorException{
         BaseActionForm<? extends BaseModel> actionFormInstance = null;
         
-        if(this.actionFormName == null || this.actionFormName.length() == 0){
+        if(this.actionFormName != null && this.actionFormName.length() > 0){
+            actionFormInstance = this.systemController.getAttribute(this.actionFormName, ScopeType.SESSION);
+    
+            if(actionFormInstance == null){
+                Set<Class<?>> actionFormClasses = ReflectionUtil.getTypesAnnotatedWith(ActionForm.class);
+        
+                if(actionFormClasses != null && !actionFormClasses.isEmpty()){
+                    for(Class<?> actionFormClass: actionFormClasses){
+                        ActionForm actionForm = actionFormClass.getAnnotation(ActionForm.class);
+                        String name = actionForm.name();
+    
+                        if(name.equals(this.actionFormName)){
+                            try{
+                                actionFormInstance = (BaseActionForm<? extends BaseModel>) ConstructorUtils.invokeConstructor(actionFormClass, null);
+    
+                                this.systemController.setAttribute(this.actionFormName, actionFormInstance, ScopeType.SESSION);
+    
+                                break;
+                            }
+                            catch(InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e){
+                                throw new InternalErrorException(e);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else{
             String action = StringUtil.replaceAll(this.systemController.getRequestURI(), this.systemController.getContextPath(), "");
-            
+    
             action = StringUtil.replaceAll(action, ProjectConstants.DEFAULT_UI_PAGES_DIR, "");
             action = StringUtil.replaceAll(action, ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION, "");
-            
+    
             int pos = action.indexOf(UIConstants.DEFAULT_PAGE_FILE_EXTENSION);
-            
+    
             if(pos >= 0){
                 action = action.substring(0, pos);
                 pos = action.lastIndexOf("/");
-                
+        
                 if(pos >= 0)
                     action = action.substring(0, pos);
             }
             
-            actionFormInstance = getActionFormInstanceByAction(action);
+            Set<Class<?>> actionFormClasses = ReflectionUtil.getTypesAnnotatedWith(ActionForm.class);
+        
+            if(actionFormClasses != null && !actionFormClasses.isEmpty()){
+                for(Class<?> actionFormClass: actionFormClasses){
+                    ActionForm actionForm = actionFormClass.getAnnotation(ActionForm.class);
+            
+                    if(action.equals(actionForm.action())){
+                        this.actionFormName = actionForm.name();
+                        
+                        actionFormInstance = this.systemController.getAttribute(actionForm.name(), ScopeType.SESSION);
+                        
+                        if(actionFormInstance == null){
+                            try{
+                                actionFormInstance = (BaseActionForm<? extends BaseModel>) ConstructorUtils.invokeConstructor(actionFormClass, null);
+    
+                                this.systemController.setAttribute(this.actionFormName, actionFormInstance, ScopeType.SESSION);
+    
+                                break;
+                            }
+                            catch(InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e){
+                                throw new InternalErrorException(e);
+                            }
+                        }
+                    }
+                }
+            }
         }
-        else
-            actionFormInstance = getActionFormInstanceByName(this.actionFormName);
         
         return actionFormInstance;
     }
@@ -940,37 +888,5 @@ public class ActionFormController{
     public void addCustomValidationMessage(String propertyValidation, String propertyName, String propertyLabel) throws InternalErrorException{
         if(propertyValidation != null && propertyValidation.length() > 0 && propertyName != null && propertyName.length() > 0)
             addMessage(ActionFormValidationMessageUtil.createCustomValidationMessage(propertyValidation, propertyName, propertyLabel));
-    }
-    
-    /**
-     * Finds the forward of the action form.
-     *
-     * @return Instance that contains the forward of the action form.
-     * @throws InternalErrorException Occurs when was not possible to execute
-     * the operation.
-     */
-    public ActionFormForwardResources findForward() throws InternalErrorException{
-        BaseActionForm<? extends BaseModel> actionForm = getActionFormInstance();
-        
-        if(actionForm != null){
-            String actionFormForwardName = actionForm.getForward();
-            
-            if(actionFormForwardName == null || actionFormForwardName.length() == 0)
-                actionFormForwardName = ActionFormConstants.DEFAULT_FORWARD_ID;
-            
-            SystemResourcesLoader loader = new SystemResourcesLoader();
-            SystemResources systemResources = loader.getDefault();
-            
-            if(systemResources != null){
-                Collection<ActionFormResources> actionFormsResources = systemResources.getActionForms();
-                
-                if(actionFormsResources != null && actionFormsResources.size() > 0)
-                    for(ActionFormResources actionFormResources: actionFormsResources)
-                        if(actionFormResources.getClazz().equals(actionForm.getClass().getName()))
-                            return actionFormResources.getForward(actionFormForwardName);
-            }
-        }
-        
-        return null;
     }
 }

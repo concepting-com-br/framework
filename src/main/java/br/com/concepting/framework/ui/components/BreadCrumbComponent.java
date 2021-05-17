@@ -2,20 +2,20 @@ package br.com.concepting.framework.ui.components;
 
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.controller.SystemController;
+import br.com.concepting.framework.controller.form.BaseActionForm;
+import br.com.concepting.framework.controller.form.annotations.ActionForm;
+import br.com.concepting.framework.controller.form.annotations.Forward;
 import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.controller.form.util.ActionFormUtil;
+import br.com.concepting.framework.controller.types.ScopeType;
 import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.model.FormModel;
-import br.com.concepting.framework.model.MainConsoleModel;
-import br.com.concepting.framework.model.ObjectModel;
-import br.com.concepting.framework.model.SystemModuleModel;
+import br.com.concepting.framework.model.*;
 import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.helpers.ActionFormForwardResources;
-import br.com.concepting.framework.resources.helpers.ActionFormResources;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.util.PropertyUtil;
+import br.com.concepting.framework.util.ReflectionUtil;
 import br.com.concepting.framework.util.types.ComponentType;
 
 import javax.servlet.jsp.JspException;
@@ -23,6 +23,7 @@ import javax.ws.rs.HttpMethod;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Class that defines the bread crumb componente (navigation history).
@@ -77,45 +78,47 @@ public class BreadCrumbComponent extends BaseActionFormComponent{
                     if(pos >= 0)
                         action = action.substring(0, pos);
                     
-                    List<ActionFormResources> actionForms = systemResources.getActionForms();
-                    ActionFormResources actionForm = null;
-                    
-                    if(actionForms != null && !actionForms.isEmpty()){
-                        for(int cont = 0; cont < actionForms.size(); cont++){
-                            actionForm = actionForms.get(cont);
+                    Set<Class<?>> actionFormClasses = ReflectionUtil.getTypesAnnotatedWith(ActionForm.class);
+                    BaseActionForm<? extends BaseModel> actionFormInstance = null;
+                    Forward[] actionFormForwards = null;
+
+                    if(actionFormClasses != null && !actionFormClasses.isEmpty()){
+                        for(Class<?> actionFormClass : actionFormClasses){
+                            ActionForm actionForm = actionFormClass.getAnnotation(ActionForm.class);
                             
-                            if(action.equals(actionForm.getAction()))
+                            if(action.equals(actionForm.action())){
+                                actionFormForwards = actionForm.forwards();
+                                actionFormInstance = getSystemController().getAttribute(actionForm.name(), ScopeType.SESSION);
+                                
                                 break;
-                            
-                            actionForm = null;
+                            }
                         }
                     }
                     
-                    if(actionForm != null){
-                        List<ActionFormForwardResources> actionFormForwards = actionForm.getForwards();
-                        ActionFormForwardResources actionFormForward = null;
-                        
-                        if(actionFormForwards != null && !actionFormForwards.isEmpty()){
-                            for(int cont = 0; cont < actionFormForwards.size(); cont++){
-                                actionFormForward = actionFormForwards.get(cont);
+                    if(actionFormInstance != null){
+                        if(actionFormForwards != null && actionFormForwards.length > 0){
+                            Forward actionFormForward = null;
+                            
+                            for(int cont = 0; cont < actionFormForwards.length ; cont++){
+                                actionFormForward = actionFormForwards[cont];
                                 
-                                if(path.equals(actionFormForward.getUrl()))
+                                if(path.equals(actionFormForward.url()))
                                     break;
                                 
                                 actionFormForward = null;
                             }
                             
-                            StringBuilder actionUrl = new StringBuilder();
+                            StringBuilder actionFormUrl = new StringBuilder();
                             
-                            actionUrl.append(action);
-                            actionUrl.append(ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION);
-                            actionUrl.append(".*");
+                            actionFormUrl.append(action);
+                            actionFormUrl.append(ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION);
+                            actionFormUrl.append(".*");
                             
-                            if(actionFormForward != null && !actionFormForward.getName().equals(ActionFormConstants.DEFAULT_FORWARD_ID)){
-                                actionUrl.append(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
-                                actionUrl.append("=");
-                                actionUrl.append(actionFormForward.getName());
-                                actionUrl.append(".*");
+                            if(actionFormForward != null && !actionFormForward.name().equals(ActionFormConstants.DEFAULT_FORWARD_ID)){
+                                actionFormUrl.append(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
+                                actionFormUrl.append("=");
+                                actionFormUrl.append(actionFormForward.name());
+                                actionFormUrl.append(".*");
                             }
                             
                             Iterator<? extends ObjectModel> iterator = objects.iterator();
@@ -124,7 +127,7 @@ public class BreadCrumbComponent extends BaseActionFormComponent{
                                 object = iterator.next();
                                 
                                 if(object != null && object.getType() != null && object.getType().equals(ComponentType.MENU_ITEM))
-                                    if(object.getAction() != null && object.getAction().matches(actionUrl.toString()))
+                                    if(object.getAction() != null && object.getAction().matches(actionFormUrl.toString()))
                                         break;
                                 
                                 object = null;

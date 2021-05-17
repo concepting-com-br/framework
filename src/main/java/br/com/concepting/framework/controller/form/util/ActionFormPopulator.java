@@ -4,6 +4,7 @@ import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.action.types.ActionType;
 import br.com.concepting.framework.controller.form.ActionFormController;
 import br.com.concepting.framework.controller.form.BaseActionForm;
+import br.com.concepting.framework.controller.form.annotations.ActionForm;
 import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.controller.helpers.RequestParameterInfo;
 import br.com.concepting.framework.controller.types.ScopeType;
@@ -138,7 +139,9 @@ public class ActionFormPopulator{
                 }
             }
             
-            this.systemController.setAttribute(this.actionForm.getName(), this.actionForm, ScopeType.SESSION);
+            ActionForm actionForm = this.actionForm.getClass().getAnnotation(ActionForm.class);
+            
+            this.systemController.setAttribute(actionForm.name(), this.actionForm, ScopeType.SESSION);
         }
     }
     

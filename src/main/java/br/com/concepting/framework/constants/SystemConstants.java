@@ -39,6 +39,7 @@ public abstract class SystemConstants{
     public static final String MAIN_CONSOLE_ATTRIBUTE_ID = "mainConsole";
     public static final String OPERATING_SYSTEM_ATTRIBUTE_ID = "os";
     public static final String OPERATING_SYSTEMS_ATTRIBUTE_ID = "oss";
+    public static final String PACKAGES_PREFIX_ATTRIBUTE_ID = "packagesPrefix";
     public static final String REQUEST_PARAMETERS_ATTRIBUTE_ID = "requestParameters";
     public static final String REQUEST_USER_AGENT_ATTRIBUTE_ID = "User-Agent";
     public static final String REQUEST_TRUE_CLIENT_IP_ATTRIBUTE_ID = "True-Client-IP";

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="systemResources.xsd">  
+<resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="systemResources.xsd">
+    <packagesPrefix></packagesPrefix>
     <mainConsole></mainConsole>  
     <languages> 
         <language id="pt_BR" default="true"></language>  
@@ -11,5 +12,4 @@
         <skin id="default" default="true"></skin> 
     </skins>  
     <actionForms/> 
-    <services/> 
 </resources>

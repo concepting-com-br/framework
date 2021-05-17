@@ -22,6 +22,8 @@ import br.com.concepting.framework.service.util.ServiceUtil;
 import br.com.concepting.framework.util.PropertyUtil;
 import br.com.concepting.framework.util.helpers.DateTime;
 import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
+import org.reflections.Reflections;
+import org.reflections.scanners.TypeAnnotationsScanner;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -34,6 +36,7 @@ import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -224,54 +227,42 @@ public class ServiceListener implements ServletContextListener{
                             
                             SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader();
                             SystemResources systemResources = systemResourcesLoader.getDefault();
-                            Collection<String> items = systemResources.getServices();
+                            Reflections reflections = new Reflections(systemResources.getPackagesPrefix(), new TypeAnnotationsScanner());
+                            Set<Class<?>> servicesClasses = reflections.getTypesAnnotatedWith(Service.class);
+                            Collection<Class<? extends IService<? extends BaseModel>>> recurrentServicesClasses = null;
                             
-                            if(items != null && !items.isEmpty()){
-                                Service serviceAnnotation = null;
-                                Collection<Class<? extends IService<? extends BaseModel>>> servicesClasses = null;
-                                
-                                for(String item: items){
-                                    Class<? extends IService<? extends BaseModel>> serviceClass = null;
-                                    
-                                    try{
-                                        serviceClass = (Class<? extends IService<? extends BaseModel>>) Class.forName(item);
+                            for(Class<?> clazz : servicesClasses){
+                                Class<? extends IService<? extends BaseModel>> serviceClass = (Class<? extends IService<? extends BaseModel>>)clazz;
+                                Service serviceAnnotation = serviceClass.getAnnotation(Service.class);
+    
+                                if(serviceAnnotation != null && serviceAnnotation.isDaemon()){
+                                    if(!serviceAnnotation.isRecurrent()){
+                                        if(executor == null)
+                                            executor = Executors.newWorkStealingPool();
+    
+                                        executor.submit(new ServiceThread(serviceClass, ServiceListener.this.loginSession));
                                     }
-                                    catch(ClassNotFoundException e){
-                                    }
-                                    
-                                    if(serviceClass != null){
-                                        serviceAnnotation = serviceClass.getAnnotation(Service.class);
-                                        
-                                        if(serviceAnnotation != null && serviceAnnotation.isDaemon()){
-                                            if(serviceAnnotation.isRecurrent()){
-                                                if(servicesClasses == null)
-                                                    servicesClasses = PropertyUtil.instantiate(Constants.DEFAULT_LIST_CLASS);
-                                                
-                                                servicesClasses.add(serviceClass);
-                                            }
-                                            else{
-                                                if(executor == null)
-                                                    executor = Executors.newWorkStealingPool();
-                                                
-                                                executor.submit(new ServiceThread(serviceClass, ServiceListener.this.loginSession));
-                                            }
-                                        }
+                                    else{
+                                        if(recurrentServicesClasses == null)
+                                            recurrentServicesClasses = PropertyUtil.instantiate(Constants.DEFAULT_LIST_CLASS);
+    
+                                        recurrentServicesClasses.add(serviceClass);
                                     }
                                 }
-                                
-                                if(servicesClasses != null && !servicesClasses.isEmpty()){
-                                    Calendar now = Calendar.getInstance();
-                                    Integer initialDelay = (60 - now.get(Calendar.SECOND));
-                                    
-                                    if(initialDelay == 60)
-                                        initialDelay = 0;
-                                    
-                                    if(scheduledExecutor == null)
-                                        scheduledExecutor = Executors.newScheduledThreadPool(servicesClasses.size());
-                                    
-                                    for(Class<? extends IService<? extends BaseModel>> serviceClass: servicesClasses)
-                                        scheduledExecutor.scheduleAtFixedRate(new ServiceThread(serviceClass, ServiceListener.this.loginSession), initialDelay, 60, TimeUnit.SECONDS);
-                                }
+                            }
+    
+                            if(recurrentServicesClasses != null && !recurrentServicesClasses.isEmpty()){
+                                Calendar now = Calendar.getInstance();
+                                Integer initialDelay = (60 - now.get(Calendar.SECOND));
+    
+                                if(initialDelay == 60)
+                                    initialDelay = 0;
+    
+                                if(scheduledExecutor == null)
+                                    scheduledExecutor = Executors.newScheduledThreadPool(servicesClasses.size());
+                            
+                                for(Class<? extends IService<? extends BaseModel>> serviceClass : recurrentServicesClasses)
+                                    scheduledExecutor.scheduleAtFixedRate(new ServiceThread(serviceClass, ServiceListener.this.loginSession), initialDelay, 60, TimeUnit.SECONDS);
                             }
                         }
                     }

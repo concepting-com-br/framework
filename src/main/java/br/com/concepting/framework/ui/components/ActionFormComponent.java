@@ -2,19 +2,20 @@ package br.com.concepting.framework.ui.components;
 
 import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.form.ActionFormController;
+import br.com.concepting.framework.controller.form.BaseActionForm;
+import br.com.concepting.framework.controller.form.annotations.ActionForm;
 import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.controller.form.types.ActionFormMessageType;
 import br.com.concepting.framework.exceptions.InternalErrorException;
+import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.constants.ModelConstants;
 import br.com.concepting.framework.resources.PropertiesResources;
-import br.com.concepting.framework.resources.helpers.ActionFormResources;
 import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.ui.controller.UIController;
 import br.com.concepting.framework.util.types.ContentType;
 
 import javax.servlet.jsp.JspException;
 import javax.ws.rs.HttpMethod;
-import java.util.Collection;
 
 /**
  * Class that defines the actionForm component.
@@ -46,6 +47,14 @@ public class ActionFormComponent extends BaseComponent{
     private String onSubmit = null;
     private ActionFormController actionFormController = null;
     
+    private String getAction(){
+        return this.action;
+    }
+    
+    protected void setAction(String action){
+        this.action = action;
+    }
+    
     /**
      * Returns the identifier of the submit target.
      *
@@ -62,24 +71,6 @@ public class ActionFormComponent extends BaseComponent{
      */
     public void setTarget(String target){
         this.target = target;
-    }
-    
-    /**
-     * Returns the action of the form.
-     *
-     * @return String that contains the action.
-     */
-    public String getAction(){
-        return this.action;
-    }
-    
-    /**
-     * Defines the action of the form.
-     *
-     * @param action String that contains the action.
-     */
-    public void setAction(String action){
-        this.action = action;
     }
     
     /**
@@ -205,32 +196,25 @@ public class ActionFormComponent extends BaseComponent{
     protected void initialize() throws InternalErrorException{
         super.initialize();
         
-        UIController uiController = getUIController();
         String name = getName();
-        Collection<ActionFormResources> actionForms = getSystemResources().getActionForms();
         
-        if(actionForms != null && !actionForms.isEmpty()){
-            StringBuilder actionFormUrl = null;
-            
-            for(ActionFormResources actionForm: actionForms){
-                if(name.equals(actionForm.getName())){
-                    actionFormUrl = new StringBuilder();
-                    actionFormUrl.append(actionForm.getAction());
-                    actionFormUrl.append(ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION);
-                    
-                    this.action = actionFormUrl.toString();
-                    
-                    break;
-                }
-            }
-            
-        }
+        if(name == null || name.length() == 0)
+            return;
         
-        if(uiController == null || name == null || name.length() == 0)
+        SystemController systemController = getSystemController();
+        
+        if(systemController == null)
+            return;
+        
+        this.actionFormController = systemController.getActionFormController(name);
+    
+        UIController uiController = getUIController();
+    
+        if(uiController == null)
             return;
         
         try{
-            uiController.setActionFormComponentInstance(name, (ActionFormComponent) this.clone());
+            uiController.setActionFormComponentInstance(name, (ActionFormComponent)this.clone());
         }
         catch(CloneNotSupportedException e){
             throw new InternalErrorException(e);
@@ -302,12 +286,19 @@ public class ActionFormComponent extends BaseComponent{
         print("\"");
         
         String contextPath = getContextPath();
+        BaseActionForm<? extends BaseModel> actionFormInstance = this.actionFormController.getActionFormInstance();
         
-        if(contextPath != null && contextPath.length() > 0 && this.action != null && this.action.length() > 0){
-            print(" action=\"");
-            print(contextPath);
-            print(this.action);
-            print("\"");
+        if(actionFormInstance != null){
+            ActionForm actionForm = actionFormInstance.getClass().getAnnotation(ActionForm.class);
+            String action = actionForm.action();
+    
+            if(contextPath != null && contextPath.length() > 0 && action != null && action.length() > 0){
+                print(" action=\"");
+                print(contextPath);
+                print(action);
+                print(ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION);
+                print("\"");
+            }
         }
         
         if(this.encoding != null && this.encoding.length() > 0){

@@ -53,7 +53,6 @@ import java.util.Map.Entry;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses.</pre>
  */
-@SuppressWarnings("deprecation")
 public abstract class HibernateQueryBuilder{
     /**
      * Builds a query expression based on a data model.

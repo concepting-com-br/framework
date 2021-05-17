@@ -25,7 +25,6 @@ package br.com.concepting.framework.service.constants;
 @SuppressWarnings("javadoc")
 public abstract class ServiceConstants{
     public static final String SERVICE_ATTRIBUTE_ID = "service";
-    public static final String SERVICES_ATTRIBUTE_ID = "services";
     public static final String DEFAULT_ID = SERVICE_ATTRIBUTE_ID;
     public static final String DEFAULT_IMPLEMENTATION_ID = "serviceImpl";
 }
