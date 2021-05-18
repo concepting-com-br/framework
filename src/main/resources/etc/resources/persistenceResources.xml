@@ -25,5 +25,4 @@
             <option id="hibernate.hbm2ddl.auto" value="update"></option> 
         </options> 
     </resources>  
-    <mappings></mappings> 
 </persistence>

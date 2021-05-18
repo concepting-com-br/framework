@@ -7,7 +7,7 @@ import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
-import br.com.concepting.framework.security.resources.SecurityResources;
+import br.com.concepting.framework.security.util.SecurityUtil;
 import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.util.DateTimeUtil;
 import br.com.concepting.framework.util.helpers.DateTime;
@@ -91,9 +91,7 @@ public class LoginSessionBoxComponent extends BaseActionFormComponent{
         super.buildRestrictions();
     }
     
-    /**
-     * @see br.com.concepting.framework.ui.components.SystemComponent#initialize()
-     */
+    @Override
     protected void initialize() throws InternalErrorException{
         setComponentType(ComponentType.LOGIN_SESSION_BOX);
         
@@ -243,12 +241,7 @@ public class LoginSessionBoxComponent extends BaseActionFormComponent{
      * @throws InternalErrorException Occurs when was not possible to render.
      */
     protected void renderControls() throws InternalErrorException{
-        SecurityResources securityResources = getSecurityResources();
-        
-        if(securityResources == null)
-            return;
-        
-        Class<? extends LoginSessionModel> modelClass = securityResources.getLoginSessionClass();
+        Class<? extends LoginSessionModel> modelClass = SecurityUtil.getLoginSessionClass();
         
         if(modelClass == null)
             return;

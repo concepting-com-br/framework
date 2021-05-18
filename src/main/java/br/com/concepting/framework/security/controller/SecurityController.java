@@ -7,13 +7,12 @@ import br.com.concepting.framework.controller.types.ScopeType;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.SystemModuleModel;
 import br.com.concepting.framework.model.SystemSessionModel;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
 import br.com.concepting.framework.security.util.SecurityUtil;
+import br.com.concepting.framework.ui.util.SkinUtil;
 import br.com.concepting.framework.util.LanguageUtil;
 import br.com.concepting.framework.util.StringUtil;
 
@@ -175,17 +174,13 @@ public class SecurityController{
                 
                 if(loginParameter.getSkin() == null || loginParameter.getSkin().length() == 0){
                     Cookie skinCookie = this.systemController.getCookie(SystemConstants.CURRENT_SKIN_ATTRIBUTE_ID);
-                    
+    
                     if(skinCookie == null){
                         String skin = loginParameter.getSkin();
-                        
-                        if(skin == null || skin.length() == 0){
-                            SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader();
-                            SystemResources systemResources = systemResourcesLoader.getDefault();
-                            
-                            loginParameter.setSkin(systemResources.getDefaultSkin());
-                        }
-                        
+    
+                        if(skin == null || skin.length() == 0)
+                            loginParameter.setSkin(SkinUtil.getDefaultSkin());
+    
                         this.systemController.addCookie(SystemConstants.CURRENT_SKIN_ATTRIBUTE_ID, loginParameter.getSkin());
                     }
                     else

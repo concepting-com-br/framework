@@ -5,6 +5,7 @@ import br.com.concepting.framework.caching.Cacher;
 import br.com.concepting.framework.caching.CacherManager;
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.exceptions.InternalErrorException;
+import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.annotations.Model;
 import br.com.concepting.framework.model.exceptions.ItemAlreadyExistsException;
 import br.com.concepting.framework.model.exceptions.ItemNotFoundException;
@@ -12,9 +13,8 @@ import br.com.concepting.framework.persistence.constants.PersistenceConstants;
 import br.com.concepting.framework.persistence.resources.PersistenceResources;
 import br.com.concepting.framework.persistence.types.RepositoryType;
 import br.com.concepting.framework.resources.FactoryResources;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
 import br.com.concepting.framework.util.PropertyUtil;
+import br.com.concepting.framework.util.ReflectionUtil;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.hibernate.Cache;
 import org.hibernate.Session;
@@ -25,14 +25,14 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.*;
 import org.hibernate.jdbc.Work;
-import org.reflections.Reflections;
-import org.reflections.scanners.TypeAnnotationsScanner;
 
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Class responsible to manipulate the persistence service with Hibernate.
@@ -245,8 +245,6 @@ public class HibernateUtil{
      * the connection.
      */
     private static SessionFactory buildSessionFactory(PersistenceResources persistenceResources) throws InternalErrorException{
-        SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader();
-        SystemResources systemResources = systemResourcesLoader.getDefault();
         Cacher<SessionFactory> cacher = CacherManager.getInstance().getCacher(HibernateUtil.class);
         CachedObject<SessionFactory> object = null;
         SessionFactory sessionFactory = null;
@@ -257,18 +255,18 @@ public class HibernateUtil{
         }
         catch(ItemNotFoundException e){
             MetadataSources sources = new MetadataSources(new StandardServiceRegistryBuilder().applySettings(buildSessionProperties(persistenceResources)).build());
-            Collection<String> mappings = persistenceResources.getMappings();
+            Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(Model.class);
             
-            if(mappings != null && !mappings.isEmpty()){
-                Class<?> modelClass = null;
-                Model modelAnnotation = null;
-                InputStream persistenceMappingStream = null;
-                StringBuilder persistenceMappingName = null;
+            if(classes != null && !classes.isEmpty()){
+                Collection<Class<? extends BaseModel>> mappings = classes.parallelStream().filter(BaseModel.class::isInstance).map(c -> (Class<? extends BaseModel>)c).collect(Collectors.toList());
+            
+                if(mappings != null && !mappings.isEmpty()){
+                    Model modelAnnotation = null;
+                    InputStream persistenceMappingStream = null;
+                    StringBuilder persistenceMappingName = null;
                 
-                for(String mapping: mappings){
-                    try{
-                        modelClass = Class.forName(mapping);
-                        modelAnnotation = modelClass.getAnnotation(Model.class);
+                    for(Class<? extends BaseModel> mapping : mappings){
+                        modelAnnotation = mapping.getAnnotation(Model.class);
                         
                         if(modelAnnotation.mappedRepositoryId() != null && modelAnnotation.mappedRepositoryId().length() > 0 && (modelAnnotation.persistenceResourcesId() == null || modelAnnotation.persistenceResourcesId().length() == 0 || modelAnnotation.persistenceResourcesId().equals(persistenceResources.getId()))){
                             if(persistenceMappingName == null)
@@ -277,7 +275,7 @@ public class HibernateUtil{
                                 persistenceMappingName.delete(0, persistenceMappingName.length());
                             
                             persistenceMappingName.append(PersistenceConstants.DEFAULT_MAPPINGS_DIR);
-                            persistenceMappingName.append(modelClass.getName());
+                            persistenceMappingName.append(mapping.getName());
                             persistenceMappingName.append(PersistenceConstants.DEFAULT_MAPPING_FILE_EXTENSION);
                             
                             persistenceMappingStream = HibernateUtil.class.getClassLoader().getResourceAsStream(persistenceMappingName.toString());
@@ -285,8 +283,6 @@ public class HibernateUtil{
                             if(persistenceMappingStream != null)
                                 sources.addInputStream(persistenceMappingStream);
                         }
-                    }
-                    catch(ClassNotFoundException e1){
                     }
                 }
             }

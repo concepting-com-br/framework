@@ -6,14 +6,11 @@ import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.form.util.ActionFormUtil;
 import br.com.concepting.framework.controller.helpers.RequestParameterInfo;
 import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.model.FormModel;
-import br.com.concepting.framework.model.SystemModuleModel;
-import br.com.concepting.framework.model.SystemSessionModel;
-import br.com.concepting.framework.model.UrlModel;
+import br.com.concepting.framework.model.*;
 import br.com.concepting.framework.model.exceptions.ItemAlreadyExistsException;
 import br.com.concepting.framework.model.exceptions.ItemNotFoundException;
+import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.processors.ExpressionProcessorUtil;
-import br.com.concepting.framework.resources.SystemResources;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.exceptions.InvalidMfaTokenException;
 import br.com.concepting.framework.security.exceptions.LoginSessionExpiredException;
@@ -22,8 +19,8 @@ import br.com.concepting.framework.security.exceptions.UserNotAuthorizedExceptio
 import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
-import br.com.concepting.framework.security.resources.SecurityResources;
 import br.com.concepting.framework.security.service.interfaces.LoginSessionService;
+import br.com.concepting.framework.security.util.SecurityUtil;
 import br.com.concepting.framework.service.interfaces.IService;
 import br.com.concepting.framework.util.DateTimeUtil;
 import br.com.concepting.framework.util.StringUtil;
@@ -186,9 +183,7 @@ public class SecurityFilter extends BaseFilter{
                SM extends SystemModuleModel,
                SS extends SystemSessionModel> void initialize() throws UserNotAuthorizedException, PermissionDeniedException, InternalErrorException{
         SystemController systemController = getSystemController();
-        SystemResources systemResources = getSystemResources();
         SecurityController securityController = getSecurityController();
-        SecurityResources securityResources = getSecurityResources();
         L loginSession = (securityController != null ? securityController.getLoginSession() : null);
         
         if(loginSession != null){
@@ -222,8 +217,9 @@ public class SecurityFilter extends BaseFilter{
                     DateTime now = new DateTime();
                     DateTime startDateTime = loginSession.getStartDateTime();
                     Long ttl = DateTimeUtil.diff(now, startDateTime, DateFieldType.MINUTES);
+                    Integer loginSessionTimeout = SecurityUtil.getLoginSessionTimeout();
                     
-                    if(securityResources.getLoginSessionTimeout() == null || ttl >= securityResources.getLoginSessionTimeout()){
+                    if(loginSessionTimeout == null || ttl >= loginSessionTimeout){
                         if(loginSessionService != null)
                             loginSessionService.logOut();
                         
@@ -261,15 +257,19 @@ public class SecurityFilter extends BaseFilter{
             if(isWebServicesRequest == null || !isWebServicesRequest){
                 systemModule = systemModuleService.loadReference(systemModule, SystemConstants.FORMS_ATTRIBUTE_ID);
                 
-                F form = systemModule.getForm(ActionFormUtil.getActionFormIdByModel(systemResources.getMainConsoleClass()));
+                Class<? extends MainConsoleModel> mainConsoleClass = ModelUtil.getMainConsoleClass();
                 
-                if(form != null){
-                    Class<F> formClass = (Class<F>) form.getClass();
-                    IService<F> formService = getService(formClass);
-                    
-                    form = formService.loadReference(form, SystemConstants.OBJECTS_ATTRIBUTE_ID);
-                    
-                    systemModule.setForm(form);
+                if(mainConsoleClass != null){
+                    F form = systemModule.getForm(ActionFormUtil.getActionFormIdByModel(mainConsoleClass));
+    
+                    if(form != null){
+                        Class<F> formClass = (Class<F>) form.getClass();
+                        IService<F> formService = getService(formClass);
+        
+                        form = formService.loadReference(form, SystemConstants.OBJECTS_ATTRIBUTE_ID);
+        
+                        systemModule.setForm(form);
+                    }
                 }
             }
             

@@ -9,7 +9,6 @@ import br.com.concepting.framework.model.ObjectModel;
 import br.com.concepting.framework.model.SystemModuleModel;
 import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.resources.PropertiesResources;
-import br.com.concepting.framework.resources.SystemResources;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
@@ -81,16 +80,12 @@ public class MenuBarComponent extends BaseActionFormComponent{
         String actionFormName = getActionFormName();
         
         if(actionFormName == null || actionFormName.length() == 0){
-            SystemResources systemResources = getSystemResources();
+            Class<? extends MainConsoleModel> modelClass = ModelUtil.getMainConsoleClass();
             
-            if(systemResources != null){
-                Class<? extends MainConsoleModel> modelClass = systemResources.getMainConsoleClass();
+            if(modelClass != null){
+                actionFormName = ActionFormUtil.getActionFormIdByModel(modelClass);
                 
-                if(modelClass != null){
-                    actionFormName = ActionFormUtil.getActionFormIdByModel(modelClass);
-                    
-                    setActionFormName(actionFormName);
-                }
+                setActionFormName(actionFormName);
             }
         }
         

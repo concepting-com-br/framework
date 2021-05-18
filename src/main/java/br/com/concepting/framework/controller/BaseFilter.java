@@ -2,9 +2,6 @@ package br.com.concepting.framework.controller;
 
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.*;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
-import br.com.concepting.framework.resources.exceptions.InvalidResourcesException;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.exceptions.PermissionDeniedException;
@@ -12,8 +9,6 @@ import br.com.concepting.framework.security.exceptions.UserNotAuthorizedExceptio
 import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
-import br.com.concepting.framework.security.resources.SecurityResources;
-import br.com.concepting.framework.security.resources.SecurityResourcesLoader;
 import br.com.concepting.framework.service.interfaces.IService;
 import br.com.concepting.framework.service.util.ServiceUtil;
 
@@ -24,28 +19,8 @@ import javax.ws.rs.HttpMethod;
 import java.io.IOException;
 
 public abstract class BaseFilter implements Filter{
-    private SystemResources systemResources = null;
-    private SecurityResources securityResources = null;
     private SystemController systemController = null;
     private SecurityController securityController = null;
-    
-    /**
-     * Returns the instance that contains the system resources.
-     *
-     * @return Instance that contains the system resources.
-     */
-    protected SystemResources getSystemResources(){
-        return this.systemResources;
-    }
-    
-    /**
-     * Returns the instance that contains the security resources.
-     *
-     * @return Instance that contains the security resources.
-     */
-    protected SecurityResources getSecurityResources(){
-        return this.securityResources;
-    }
     
     /**
      * Returns the instance of the system controller.
@@ -142,29 +117,5 @@ public abstract class BaseFilter implements Filter{
                 this.systemController.forward(e);
             }
         }
-    }
-    
-    /**
-     * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
-     */
-    public void init(FilterConfig filterConfig) throws ServletException{
-        try{
-            SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader();
-            
-            this.systemResources = systemResourcesLoader.getDefault();
-            
-            SecurityResourcesLoader securityResourcesLoader = new SecurityResourcesLoader();
-            
-            this.securityResources = securityResourcesLoader.getDefault();
-        }
-        catch(InvalidResourcesException e){
-            this.systemController.forward(e);
-        }
-    }
-    
-    /**
-     * @see javax.servlet.Filter#destroy()
-     */
-    public void destroy(){
     }
 }

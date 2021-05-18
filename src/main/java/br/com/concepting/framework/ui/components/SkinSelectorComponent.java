@@ -6,8 +6,8 @@ import br.com.concepting.framework.controller.form.constants.ActionFormConstants
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.MainConsoleModel;
 import br.com.concepting.framework.model.util.ModelUtil;
-import br.com.concepting.framework.resources.SystemResources;
 import br.com.concepting.framework.ui.constants.UIConstants;
+import br.com.concepting.framework.ui.util.SkinUtil;
 
 import javax.ws.rs.HttpMethod;
 
@@ -57,24 +57,22 @@ public class SkinSelectorComponent extends ListPropertyComponent{
      * @see br.com.concepting.framework.ui.components.OptionsPropertyComponent#buildEvents()
      */
     protected void buildEvents() throws InternalErrorException{
-        SystemResources systemResources = getSystemResources();
-        
-        if(systemResources != null){
-            Class<? extends MainConsoleModel> modelClass = systemResources.getMainConsoleClass();
+        if(hasInvalidPropertyDefinition() == null){
+            Class<? extends MainConsoleModel> modelClass = ModelUtil.getMainConsoleClass();
             
             if(modelClass != null){
                 String contextPath = getContextPath();
                 String actionFormUrl = ModelUtil.getUrlByModel(modelClass);
-                
+    
                 if(contextPath != null && contextPath.length() > 0 && actionFormUrl != null && actionFormUrl.length() > 0){
                     StringBuilder url = new StringBuilder();
-                    
+        
                     url.append(contextPath);
                     url.append(actionFormUrl);
                     url.append(ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION);
-                    
+        
                     StringBuilder onChange = new StringBuilder();
-                    
+        
                     onChange.append("submitRequest('");
                     onChange.append(HttpMethod.POST);
                     onChange.append("', '");
@@ -90,13 +88,13 @@ public class SkinSelectorComponent extends ListPropertyComponent{
                     onChange.append("&");
                     onChange.append(SystemConstants.CURRENT_SKIN_ATTRIBUTE_ID);
                     onChange.append("=' + this.value);");
-                    
+        
                     setOnChange(onChange.toString());
-                    
-                    super.buildEvents();
                 }
             }
         }
+    
+        super.buildEvents();
     }
     
     /**
@@ -112,12 +110,8 @@ public class SkinSelectorComponent extends ListPropertyComponent{
      * @see br.com.concepting.framework.ui.components.ListPropertyComponent#initialize()
      */
     protected void initialize() throws InternalErrorException{
-        SystemResources systemResources = getSystemResources();
-        
-        if(systemResources != null){
-            setValue(getCurrentSkin());
-            setDatasetValues(systemResources.getSkins());
-        }
+        setValue(getCurrentSkin());
+        setDatasetValues(SkinUtil.getAvailableSkins());
         
         super.initialize();
     }

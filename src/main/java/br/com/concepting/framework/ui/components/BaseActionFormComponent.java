@@ -1,5 +1,6 @@
 package br.com.concepting.framework.ui.components;
 
+import br.com.concepting.framework.annotations.System;
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.controller.action.types.ActionType;
 import br.com.concepting.framework.controller.form.ActionFormController;
@@ -12,7 +13,6 @@ import br.com.concepting.framework.model.SystemModuleModel;
 import br.com.concepting.framework.model.constants.ModelConstants;
 import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.resources.PropertiesResources;
-import br.com.concepting.framework.resources.SystemResources;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
@@ -21,6 +21,7 @@ import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.ui.controller.UIController;
 import br.com.concepting.framework.util.NumberUtil;
 import br.com.concepting.framework.util.PropertyUtil;
+import br.com.concepting.framework.util.ReflectionUtil;
 import br.com.concepting.framework.util.StringUtil;
 import br.com.concepting.framework.util.types.AlignmentType;
 import br.com.concepting.framework.util.types.ComponentType;
@@ -28,6 +29,7 @@ import br.com.concepting.framework.util.types.PositionType;
 
 import javax.servlet.jsp.JspException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Set;
 
 /**
  * Class that defines the basic implementation of a form component.
@@ -151,10 +153,10 @@ public abstract class BaseActionFormComponent extends BaseComponent{
      */
     protected PropertiesResources getMainConsoleResources() throws InternalErrorException{
         if(this.mainConsoleResources == null){
-            SystemResources systemResources = getSystemResources();
+            Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(System.class);
             
-            if(systemResources != null){
-                Class<? extends MainConsoleModel> mainConsoleClass = systemResources.getMainConsoleClass();
+            if(classes != null && !classes.isEmpty()){
+                Class<? extends MainConsoleModel> mainConsoleClass = classes.parallelStream().filter(MainConsoleModel.class::isInstance).map(c -> (Class<? extends MainConsoleModel>)c).findFirst().get();
                 
                 if(mainConsoleClass != null){
                     String resourcesId = ModelUtil.getResourcesIdByModel(mainConsoleClass);

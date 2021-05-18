@@ -48,6 +48,7 @@ public abstract class ProjectConstants{
     public static final String DEFAULT_PERSISTENCE_MAPPING_DTD_PUBLIC_ID = "-//Hibernate/Hibernate Mapping DTD 3.0//EN";
     public static final String DEFAULT_PERSISTENCE_MAPPING_DTD_SYSTEM_ID = "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd";
     public static final String DEFAULT_PERSISTENCE_MAPPING_TEMPLATE_FILE_ID = "persistenceMapping.xml";
+    public static final String DEFAULT_PERSISTENCE_STRUCTURE_TEMPLATE_FILE_ID = "persistenceStructure.xml";
     public static final String DEFAULT_REPORTS_DIR = DEFAULT_SOURCE_DIR.concat("reports/");
     public static final String DEFAULT_SERVICE_CLASS_TEMPLATE_FILE_ID = "serviceClass.xml";
     public static final String DEFAULT_SERVICE_INTERFACE_TEMPLATE_FILE_ID = "serviceInterface.xml";

@@ -1,12 +1,9 @@
 package br.com.concepting.framework.webservice.controller;
 
 import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
+import br.com.concepting.framework.util.ReflectionUtil;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.reflections.Reflections;
-import org.reflections.scanners.TypeAnnotationsScanner;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.Path;
@@ -45,10 +42,7 @@ public class WebServiceListener extends ResourceConfig{
         
         register(MultiPartFeature.class);
         
-        SystemResourcesLoader loader = new SystemResourcesLoader();
-        SystemResources resources = loader.getDefault();
-        Reflections reflections = new Reflections(resources.getPackagesPrefix(), new TypeAnnotationsScanner());
-        Set<Class<?>> servicesClasses = reflections.getTypesAnnotatedWith(Path.class);
+        Set<Class<?>> servicesClasses = ReflectionUtil.getTypesAnnotatedWith(Path.class);
         
         if(servicesClasses != null && !servicesClasses.isEmpty())
             for(Class<?> serviceClass : servicesClasses)

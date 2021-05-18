@@ -1,10 +1,11 @@
 package br.com.concepting.framework.util;
 
-import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
+import br.com.concepting.framework.annotations.System;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Class responsible to manipulate the language resources.
@@ -28,6 +29,22 @@ import java.util.Locale;
  * along with this program.  If not, see http://www.gnu.org/licenses.</pre>
  */
 public class LanguageUtil{
+    public static Collection<String> getAvailableLanguages(){
+        Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(System.class);
+        
+        if(classes != null && !classes.isEmpty()){
+            try{
+                System system = classes.parallelStream().map(c -> c.getAnnotation(System.class)).findFirst().get();
+                
+                return Arrays.asList(system.availableLanguages());
+            }
+            catch(Throwable e){
+            }
+        }
+        
+        return null;
+    }
+    
     /**
      * Returns the instance of the language based on its identifier.
      *
@@ -58,20 +75,16 @@ public class LanguageUtil{
      * @return Instance that contains the language.
      */
     public static Locale getDefaultLanguage(){
-        try{
-            SystemResourcesLoader loader = new SystemResourcesLoader();
-            SystemResources resources = loader.getDefault();
+        Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(System.class);
+    
+        if(classes != null && !classes.isEmpty()){
+            try{
+                System system = classes.parallelStream().map(c -> c.getAnnotation(System.class)).findFirst().get();
             
-            if(resources != null){
-                Locale language = resources.getDefaultLanguage();
-                
-                if(language == null)
-                    language = Locale.getDefault();
-                
-                return language;
+                return LanguageUtil.getLanguageByString(system.defaultLanguage());
             }
-        }
-        catch(InternalErrorException e){
+            catch(Throwable e){
+            }
         }
         
         return Locale.getDefault();

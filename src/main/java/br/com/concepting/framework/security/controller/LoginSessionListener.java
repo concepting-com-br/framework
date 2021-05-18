@@ -6,9 +6,8 @@ import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
-import br.com.concepting.framework.security.resources.SecurityResources;
-import br.com.concepting.framework.security.resources.SecurityResourcesLoader;
 import br.com.concepting.framework.security.service.interfaces.LoginSessionService;
+import br.com.concepting.framework.security.util.SecurityUtil;
 import br.com.concepting.framework.service.interfaces.IService;
 import br.com.concepting.framework.service.util.ServiceUtil;
 
@@ -139,12 +138,8 @@ public class LoginSessionListener implements HttpSessionListener{
      * security resources.
      */
     protected void initialize() throws InternalErrorException{
-        SecurityResourcesLoader loader = new SecurityResourcesLoader();
-        SecurityResources resources = loader.getDefault();
-        
-        if(resources != null)
-            if(this.systemController != null)
-                this.systemController.setSessionTimeout(resources.getLoginSessionTimeout());
+        if(this.systemController != null)
+            this.systemController.setSessionTimeout(SecurityUtil.getLoginSessionTimeout());
     }
     
     /**

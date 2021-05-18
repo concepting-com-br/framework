@@ -1,17 +1,15 @@
 package br.com.concepting.framework.processors;
 
 import br.com.concepting.framework.constants.ProjectConstants;
-import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.BaseModel;
+import br.com.concepting.framework.model.MainConsoleModel;
 import br.com.concepting.framework.model.processors.ModelAnnotationProcessor;
+import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.processors.helpers.ProjectBuild;
 import br.com.concepting.framework.processors.interfaces.IAnnotationProcessor;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
-import br.com.concepting.framework.security.constants.SecurityConstants;
-import br.com.concepting.framework.security.resources.SecurityResources;
-import br.com.concepting.framework.security.resources.SecurityResourcesLoader;
+import br.com.concepting.framework.security.model.LoginSessionModel;
+import br.com.concepting.framework.security.util.SecurityUtil;
 import br.com.concepting.framework.util.ExceptionUtil;
 import br.com.concepting.framework.util.FileUtil;
 import br.com.concepting.framework.util.PropertyUtil;
@@ -51,8 +49,6 @@ import java.util.Set;
 public class AnnotationProcessorFactory extends AbstractProcessor{
     private ProcessingEnvironment environment = null;
     private ProjectBuild build = null;
-    private SystemResources systemResources = null;
-    private SecurityResources securityResources = null;
     
     /**
      * Returns the instance that contains the build information.
@@ -78,7 +74,7 @@ public class AnnotationProcessorFactory extends AbstractProcessor{
      *
      * @return Instance that contains the properties.
      */
-    protected ProcessingEnvironment getEnvironment(){
+    public ProcessingEnvironment getEnvironment(){
         return this.environment;
     }
     
@@ -92,24 +88,12 @@ public class AnnotationProcessorFactory extends AbstractProcessor{
     private void setEnvironment(ProcessingEnvironment environment) throws InternalErrorException{
         try{
             this.environment = environment;
-            
-            String buildResourcesDirname = getBuildResourcesDirname();
-            SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader(buildResourcesDirname);
-            
-            this.systemResources = systemResourcesLoader.getDefault();
-            
-            SecurityResourcesLoader securityResourcesLoader = new SecurityResourcesLoader(buildResourcesDirname);
-            
-            this.securityResources = securityResourcesLoader.getDefault();
-            
             this.build = new ProjectBuild();
             this.build.setName(getBuildName());
             this.build.setVersion(getBuildVersion());
             this.build.setBaseDirname(getBuildBaseDirname());
-            this.build.setResourcesDirname(buildResourcesDirname);
+            this.build.setResourcesDirname(getBuildResourcesDirname());
             
-            ExpressionProcessorUtil.setVariable(SystemConstants.RESOURCES_ATTRIBUTE_ID, this.systemResources);
-            ExpressionProcessorUtil.setVariable(SecurityConstants.RESOURCES_ATTRIBUTE_ID, this.securityResources);
             ExpressionProcessorUtil.setVariable(ProjectConstants.BUILD_ATTRIBUTE_ID, this.build);
         }
         catch(Throwable e){
@@ -200,20 +184,22 @@ public class AnnotationProcessorFactory extends AbstractProcessor{
             IAnnotationProcessor annotationProcessor = null;
             String declarationClassName = null;
             
-            if(this.securityResources != null && this.systemResources != null && annotations != null && !annotations.isEmpty()){
+            if(annotations != null && !annotations.isEmpty()){
                 for(TypeElement annotation: annotations){
                     declarations = environment.getElementsAnnotatedWith(annotation);
                     
                     if(declarations != null && !declarations.isEmpty()){
+                        Class<? extends MainConsoleModel> mainConsoleClass = ModelUtil.getMainConsoleClass();
+                        Class<? extends LoginSessionModel> loginSessionClass = SecurityUtil.getLoginSessionClass();
                         String loginSessionClassName = null;
                         String mainConsoleClassName = null;
                         
                         for(Element declaration: declarations){
                             declarationClassName = declaration.toString();
                             
-                            if(this.securityResources.getLoginSessionClass() != null && declarationClassName.equals(this.securityResources.getLoginSessionClass().getName()))
+                            if(loginSessionClass != null && declarationClassName.equals(loginSessionClass.getName()))
                                 loginSessionClassName = declarationClassName;
-                            else if(this.systemResources.getMainConsoleClass() != null && declarationClassName.equals(this.systemResources.getMainConsoleClass().getName()))
+                            else if(mainConsoleClass != null && declarationClassName.equals(mainConsoleClass.getName()))
                                 mainConsoleClassName = declarationClassName;
                             else if(PropertyUtil.isModel(declarationClassName)){
                                 annotationProcessor = getAnnotationProcessor(declarationClassName);

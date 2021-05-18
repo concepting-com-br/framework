@@ -10,7 +10,7 @@ import br.com.concepting.framework.controller.form.util.ActionFormUtil;
 import br.com.concepting.framework.controller.types.ScopeType;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.*;
-import br.com.concepting.framework.resources.SystemResources;
+import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.ui.constants.UIConstants;
@@ -58,12 +58,11 @@ public class BreadCrumbComponent extends BaseActionFormComponent{
      */
     protected ObjectModel lookupNavigation() throws InternalErrorException{
         SystemController systemController = getSystemController();
-        SystemResources systemResources = getSystemResources();
         SecurityController securityController = getSecurityController();
         String actionFormName = getActionFormName();
         ObjectModel object = null;
         
-        if(actionFormName != null && actionFormName.length() > 0 && systemResources != null && systemController != null && securityController != null){
+        if(actionFormName != null && actionFormName.length() > 0 && systemController != null && securityController != null){
             LoginSessionModel loginSession = securityController.getLoginSession();
             SystemModuleModel systemModule = loginSession.getSystemModule();
             FormModel form = systemModule.getForm(actionFormName);
@@ -151,16 +150,12 @@ public class BreadCrumbComponent extends BaseActionFormComponent{
         String actionFormName = getActionFormName();
         
         if(actionFormName == null || actionFormName.length() == 0){
-            SystemResources systemResources = getSystemResources();
+            Class<? extends MainConsoleModel> modelClass = ModelUtil.getMainConsoleClass();
             
-            if(systemResources != null){
-                Class<? extends MainConsoleModel> modelClass = systemResources.getMainConsoleClass();
+            if(modelClass != null){
+                actionFormName = ActionFormUtil.getActionFormIdByModel(modelClass);
                 
-                if(modelClass != null){
-                    actionFormName = ActionFormUtil.getActionFormIdByModel(modelClass);
-                    
-                    setActionFormName(actionFormName);
-                }
+                setActionFormName(actionFormName);
             }
         }
         

@@ -1,16 +1,13 @@
 package br.com.concepting.framework.ui.components;
 
-import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.action.types.ActionType;
 import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.MainConsoleModel;
 import br.com.concepting.framework.model.util.ModelUtil;
-import br.com.concepting.framework.resources.SystemResources;
 import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.util.LanguageUtil;
-import br.com.concepting.framework.util.PropertyUtil;
 
 import javax.ws.rs.HttpMethod;
 import java.util.Collection;
@@ -81,49 +78,43 @@ public class LanguageSelectorComponent extends ListPropertyComponent{
      */
     protected void buildEvents() throws InternalErrorException{
         if(hasInvalidPropertyDefinition() == null){
-            SystemResources systemResources = getSystemResources();
+            Class<? extends MainConsoleModel> modelClass = ModelUtil.getMainConsoleClass();
             
-            if(systemResources != null){
-                Class<? extends MainConsoleModel> modelClass = systemResources.getMainConsoleClass();
+            if(modelClass != null){
+                String contextPath = getContextPath();
+                String actionFormUrl = ModelUtil.getUrlByModel(modelClass);
                 
-                if(modelClass != null){
-                    String contextPath = getContextPath();
-                    String actionFormUrl = ModelUtil.getUrlByModel(modelClass);
+                if(contextPath != null && contextPath.length() > 0 && actionFormUrl != null && actionFormUrl.length() > 0){
+                    StringBuilder url = new StringBuilder();
                     
-                    if(contextPath != null && contextPath.length() > 0 && actionFormUrl != null && actionFormUrl.length() > 0){
-                        StringBuilder url = new StringBuilder();
-                        
-                        url.append(contextPath);
-                        url.append(actionFormUrl);
-                        url.append(ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION);
-                        
-                        StringBuilder onChange = new StringBuilder();
-                        
-                        onChange.append("submitRequest('");
-                        onChange.append(HttpMethod.POST);
-                        onChange.append("', '");
-                        onChange.append(url);
-                        onChange.append("', '");
-                        onChange.append(ActionFormConstants.ACTION_ATTRIBUTE_ID);
-                        onChange.append("=");
-                        onChange.append(ActionType.CHANGE_CURRENT_LANGUAGE.getMethod());
-                        onChange.append("&");
-                        onChange.append(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
-                        onChange.append("=");
-                        onChange.append(ActionFormConstants.DEFAULT_ROOT_FORWARD_ID);
-                        onChange.append("&");
-                        onChange.append(SystemConstants.CURRENT_LANGUAGE_ATTRIBUTE_ID);
-                        onChange.append("=' + this.value);");
-                        
-                        setOnChange(onChange.toString());
-                        
-                        super.buildEvents();
-                    }
+                    url.append(contextPath);
+                    url.append(actionFormUrl);
+                    url.append(ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION);
+                    
+                    StringBuilder onChange = new StringBuilder();
+                    
+                    onChange.append("submitRequest('");
+                    onChange.append(HttpMethod.POST);
+                    onChange.append("', '");
+                    onChange.append(url);
+                    onChange.append("', '");
+                    onChange.append(ActionFormConstants.ACTION_ATTRIBUTE_ID);
+                    onChange.append("=");
+                    onChange.append(ActionType.CHANGE_CURRENT_LANGUAGE.getMethod());
+                    onChange.append("&");
+                    onChange.append(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
+                    onChange.append("=");
+                    onChange.append(ActionFormConstants.DEFAULT_ROOT_FORWARD_ID);
+                    onChange.append("&");
+                    onChange.append(SystemConstants.CURRENT_LANGUAGE_ATTRIBUTE_ID);
+                    onChange.append("=' + this.value);");
+                    
+                    setOnChange(onChange.toString());
                 }
             }
         }
-        else
-            super.buildEvents();
+
+        super.buildEvents();
     }
     
     /**
@@ -140,27 +131,18 @@ public class LanguageSelectorComponent extends ListPropertyComponent{
      * @see br.com.concepting.framework.ui.components.ListPropertyComponent#initialize()
      */
     protected void initialize() throws InternalErrorException{
-        SystemResources systemResources = getSystemResources();
+        Collection<String> availableLanguages = LanguageUtil.getAvailableLanguages();
         
-        if(systemResources != null){
-            Collection<Locale> availableLanguages = systemResources.getLanguages();
+        if(availableLanguages != null && !availableLanguages.isEmpty()){
+            setDatasetValues(availableLanguages);
             
-            if(availableLanguages != null && !availableLanguages.isEmpty()){
-                Collection<String> languages = PropertyUtil.instantiate(Constants.DEFAULT_LIST_CLASS);
+            String name = getName();
+            
+            if(name == null || name.length() == 0){
+                Locale currentLanguage = getCurrentLanguage();
                 
-                for(Locale availableLanguage: availableLanguages)
-                    languages.add(availableLanguage.toString());
-                
-                setDatasetValues(languages);
-                
-                String name = getName();
-                
-                if(name == null || name.length() == 0){
-                    Locale currentLanguage = getCurrentLanguage();
-                    
-                    if(currentLanguage != null)
-                        setValue(currentLanguage.toString());
-                }
+                if(currentLanguage != null)
+                    setValue(currentLanguage.toString());
             }
         }
         

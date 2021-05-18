@@ -1,11 +1,13 @@
 package br.com.concepting.framework.model.util;
 
+import br.com.concepting.framework.annotations.System;
 import br.com.concepting.framework.caching.CachedObject;
 import br.com.concepting.framework.caching.Cacher;
 import br.com.concepting.framework.caching.CacherManager;
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.controller.form.util.ActionFormValidator;
 import br.com.concepting.framework.model.BaseModel;
+import br.com.concepting.framework.model.MainConsoleModel;
 import br.com.concepting.framework.model.annotations.Model;
 import br.com.concepting.framework.model.constants.ModelConstants;
 import br.com.concepting.framework.model.exceptions.ItemAlreadyExistsException;
@@ -14,6 +16,7 @@ import br.com.concepting.framework.model.helpers.ModelInfo;
 import br.com.concepting.framework.model.types.ConditionType;
 import br.com.concepting.framework.persistence.types.RelationJoinType;
 import br.com.concepting.framework.resources.constants.ResourcesConstants;
+import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.util.*;
 import br.com.concepting.framework.util.helpers.PropertyInfo;
 import br.com.concepting.framework.util.types.SortOrderType;
@@ -53,6 +56,20 @@ import java.util.stream.Collectors;
  */
 public class ModelUtil{
     private static final ObjectMapper propertyMapper = PropertyUtil.getMapper();
+    
+    public static Class<? extends MainConsoleModel> getMainConsoleClass(){
+        Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(System.class);
+        
+        if(classes != null && !classes.isEmpty()){
+            try{
+                return classes.parallelStream().map(c -> (Class<? extends MainConsoleModel>) c).findFirst().get();
+            }
+            catch(Throwable e){
+            }
+        }
+        
+        return MainConsoleModel.class;
+    }
     
     /**
      * Returns the serial number of the form.

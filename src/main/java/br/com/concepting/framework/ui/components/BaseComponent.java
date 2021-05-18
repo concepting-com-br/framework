@@ -1,24 +1,23 @@
 package br.com.concepting.framework.ui.components;
 
+import br.com.concepting.framework.annotations.System;
+import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.resources.PropertiesResources;
 import br.com.concepting.framework.resources.PropertiesResourcesLoader;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
-import br.com.concepting.framework.resources.exceptions.InvalidResourcesException;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
-import br.com.concepting.framework.security.resources.SecurityResources;
-import br.com.concepting.framework.security.resources.SecurityResourcesLoader;
 import br.com.concepting.framework.ui.components.types.EventType;
 import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.ui.controller.UIController;
+import br.com.concepting.framework.ui.util.SkinUtil;
 import br.com.concepting.framework.util.ExceptionUtil;
 import br.com.concepting.framework.util.LanguageUtil;
+import br.com.concepting.framework.util.ReflectionUtil;
 import br.com.concepting.framework.util.types.ComponentType;
 
 import javax.servlet.http.Cookie;
@@ -28,6 +27,7 @@ import javax.servlet.jsp.tagext.BodyContent;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 import java.io.PrintWriter;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Class that defines the basic implementation of a component.
@@ -71,8 +71,6 @@ public abstract class BaseComponent extends BodyTagSupport implements Cloneable{
     private Boolean hasBody = null;
     private Boolean render = null;
     private Boolean renderWhenAuthenticated = null;
-    private SystemResources systemResources = null;
-    private SecurityResources securityResources = null;
     private SystemController systemController = null;
     private SecurityController securityController = null;
     private UIController uiController = null;
@@ -157,58 +155,6 @@ public abstract class BaseComponent extends BodyTagSupport implements Cloneable{
      */
     protected UIController getUIController(){
         return this.uiController;
-    }
-    
-    /**
-     * Returns the system resources.
-     *
-     * @return Instance that contains the system resources.
-     * @throws InvalidResourcesException Occurs when was not possible to execute
-     * the operation.
-     */
-    protected SystemResources getSystemResources() throws InvalidResourcesException{
-        if(this.systemResources == null){
-            SystemResourcesLoader loader = new SystemResourcesLoader();
-            
-            this.systemResources = loader.getDefault();
-        }
-        
-        return this.systemResources;
-    }
-    
-    /**
-     * Defines the system resources.
-     *
-     * @param systemResources Instance that contains the system resources.
-     */
-    private void setSystemResources(SystemResources systemResources){
-        this.systemResources = systemResources;
-    }
-    
-    /**
-     * Returns the security resources.
-     *
-     * @return Instance that contains the security resources.
-     * @throws InvalidResourcesException Occurs when was not possible to execute
-     * the operation.
-     */
-    protected SecurityResources getSecurityResources() throws InvalidResourcesException{
-        if(this.securityResources == null){
-            SecurityResourcesLoader loader = new SecurityResourcesLoader();
-            
-            this.securityResources = loader.getDefault();
-        }
-        
-        return this.securityResources;
-    }
-    
-    /**
-     * Defines the security resources.
-     *
-     * @param securityResources Instance that contains the security resources.
-     */
-    private void setSecurityResources(SecurityResources securityResources){
-        this.securityResources = securityResources;
     }
     
     /**
@@ -597,13 +543,20 @@ public abstract class BaseComponent extends BodyTagSupport implements Cloneable{
      * @throws InternalErrorException Occurs when was not possible to execute the operation.
      */
     protected Locale getCurrentLanguage() throws InternalErrorException{
-        if(this.securityController != null){
-            LoginSessionModel loginSession = this.securityController.getLoginSession();
-            UserModel user = (loginSession != null ? loginSession.getUser() : null);
-            LoginParameterModel loginParameter = (user != null ? user.getLoginParameter() : null);
+        if(this.systemController != null){
+            Cookie languageCookie = this.systemController.getCookie(SystemConstants.CURRENT_LANGUAGE_ATTRIBUTE_ID);
+    
+            if(languageCookie != null)
+                return LanguageUtil.getLanguageByString(languageCookie.getValue());
             
-            if(loginParameter != null && loginParameter.getLanguage() != null && loginParameter.getLanguage().length() > 0)
-                return LanguageUtil.getLanguageByString(loginParameter.getLanguage());
+            if(this.securityController != null){
+                LoginSessionModel loginSession = this.securityController.getLoginSession();
+                UserModel user = (loginSession != null ? loginSession.getUser() : null);
+                LoginParameterModel loginParameter = (user != null ? user.getLoginParameter() : null);
+    
+                if(loginParameter != null && loginParameter.getLanguage() != null && loginParameter.getLanguage().length() > 0)
+                    return LanguageUtil.getLanguageByString(loginParameter.getLanguage());
+            }
         }
         
         return LanguageUtil.getDefaultLanguage();
@@ -618,14 +571,21 @@ public abstract class BaseComponent extends BodyTagSupport implements Cloneable{
     protected String getCurrentSkin() throws InternalErrorException{
         if(this.systemController != null){
             Cookie skinCookie = this.systemController.getCookie(SystemConstants.CURRENT_SKIN_ATTRIBUTE_ID);
-            
+    
             if(skinCookie != null)
                 return skinCookie.getValue();
+
+            if(this.securityController != null){
+                LoginSessionModel loginSession = this.securityController.getLoginSession();
+                UserModel user = (loginSession != null ? loginSession.getUser() : null);
+                LoginParameterModel loginParameter = (user != null ? user.getLoginParameter() : null);
+    
+                if(loginParameter != null && loginParameter.getSkin() != null && loginParameter.getSkin().length() > 0)
+                    return loginParameter.getSkin();
+            }
         }
-        
-        SystemResources systemResources = getSystemResources();
-        
-        return systemResources.getDefaultSkin();
+    
+        return SkinUtil.getDefaultSkin();
     }
     
     /**
@@ -1155,7 +1115,5 @@ public abstract class BaseComponent extends BodyTagSupport implements Cloneable{
         setRender(null);
         setRenderWhenAuthenticated(null);
         setHasBody(null);
-        setSystemResources(null);
-        setSecurityResources(null);
     }
 }

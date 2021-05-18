@@ -1,5 +1,6 @@
 package br.com.concepting.framework.model;
 
+import br.com.concepting.framework.annotations.System;
 import br.com.concepting.framework.model.annotations.Model;
 import br.com.concepting.framework.model.annotations.Property;
 import br.com.concepting.framework.model.types.ValidationType;
@@ -26,6 +27,7 @@ import br.com.concepting.framework.model.types.ValidationType;
  * along with this program.  If not, see http://www.gnu.org/licenses.</pre>
  */
 @Model(ui = "Main Console", templateId = "mainConsole")
+@System
 public abstract class MainConsoleModel extends BaseModel{
     private static final long serialVersionUID = -8176019419161691084L;
     

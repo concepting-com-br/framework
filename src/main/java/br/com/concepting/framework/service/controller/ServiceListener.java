@@ -6,13 +6,9 @@ import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.SystemModuleModel;
 import br.com.concepting.framework.model.SystemSessionModel;
 import br.com.concepting.framework.model.exceptions.ItemAlreadyExistsException;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
 import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
-import br.com.concepting.framework.security.resources.SecurityResources;
-import br.com.concepting.framework.security.resources.SecurityResourcesLoader;
 import br.com.concepting.framework.security.service.interfaces.LoginSessionService;
 import br.com.concepting.framework.security.util.SecurityUtil;
 import br.com.concepting.framework.service.annotations.Service;
@@ -20,10 +16,9 @@ import br.com.concepting.framework.service.helpers.ServiceThread;
 import br.com.concepting.framework.service.interfaces.IService;
 import br.com.concepting.framework.service.util.ServiceUtil;
 import br.com.concepting.framework.util.PropertyUtil;
+import br.com.concepting.framework.util.ReflectionUtil;
 import br.com.concepting.framework.util.helpers.DateTime;
 import com.mysql.cj.jdbc.AbandonedConnectionCleanupThread;
-import org.reflections.Reflections;
-import org.reflections.scanners.TypeAnnotationsScanner;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -117,9 +112,7 @@ public class ServiceListener implements ServletContextListener{
         setEvent(event);
     
         try{
-            SecurityResourcesLoader loader = new SecurityResourcesLoader();
-            SecurityResources resources = loader.getDefault();
-            Class<L> loginSessionClass = (Class<L>)resources.getLoginSessionClass();
+            Class<L> loginSessionClass = (Class<L>)SecurityUtil.getLoginSessionClass();
             LoginSessionService<L, U, LP> loginSessionService = getService(loginSessionClass);
             
             loginSessionService.logOutAll();
@@ -225,10 +218,7 @@ public class ServiceListener implements ServletContextListener{
                             catch(ItemAlreadyExistsException e1){
                             }
                             
-                            SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader();
-                            SystemResources systemResources = systemResourcesLoader.getDefault();
-                            Reflections reflections = new Reflections(systemResources.getPackagesPrefix(), new TypeAnnotationsScanner());
-                            Set<Class<?>> servicesClasses = reflections.getTypesAnnotatedWith(Service.class);
+                            Set<Class<?>> servicesClasses = ReflectionUtil.getTypesAnnotatedWith(Service.class);
                             Collection<Class<? extends IService<? extends BaseModel>>> recurrentServicesClasses = null;
                             
                             for(Class<?> clazz : servicesClasses){

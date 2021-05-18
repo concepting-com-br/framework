@@ -1,7 +1,6 @@
 package br.com.concepting.framework.persistence.util;
 
 import br.com.concepting.framework.constants.Constants;
-import br.com.concepting.framework.constants.ProjectConstants;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.constants.ModelConstants;
@@ -219,5 +218,81 @@ public class PersistenceUtil{
             return StringUtil.replaceAll(modelClass.getPackage().getName(), ".".concat(ModelConstants.DEFAULT_ID), ".".concat(PersistenceConstants.DEFAULT_ID).concat(".").concat(Constants.DEFAULT_INTERFACES_ID));
         
         return null;
+    }
+    
+    public static String generateStructure(String resourcesDirname) throws InternalErrorException{
+        try{
+            String content = null;
+            PersistenceResourcesLoader loader = new PersistenceResourcesLoader(resourcesDirname);
+            PersistenceResources persistenceResources = loader.getDefault();
+            
+            if(persistenceResources != null){
+                StringBuilder mappingsDirname = new StringBuilder();
+                
+                mappingsDirname.append(resourcesDirname);
+                mappingsDirname.append(FileUtil.getDirectorySeparator());
+                mappingsDirname.append(PersistenceConstants.DEFAULT_MAPPINGS_DIR);
+                
+                File mappingsDirectory = new File(mappingsDirname.toString());
+                
+                if(mappingsDirectory.exists()){
+                    File[] mappings = mappingsDirectory.listFiles();
+                    
+                    if(mappings != null && mappings.length > 0){
+                        StandardServiceRegistry registry = new StandardServiceRegistryBuilder().applySetting(Environment.DIALECT, HibernateUtil.getSessionDialect(persistenceResources).getName()).applySetting(Environment.GLOBALLY_QUOTED_IDENTIFIERS, true).build();
+                        MetadataSources sources = new MetadataSources(registry);
+                        
+                        for(File persistenceMapping: mappings)
+                            sources.addFile(persistenceMapping.getAbsolutePath());
+                        
+                        StringBuilder destinationFilename = new StringBuilder();
+                        
+                        destinationFilename.append(FileUtil.getTempDirectoryPath());
+                        destinationFilename.append(FileUtil.getDirectorySeparator());
+                        destinationFilename.append(new SecureRandom().nextLong());
+                        
+                        File destinationFile = new File(destinationFilename.toString());
+                        
+                        if(destinationFile.exists())
+                            destinationFile.delete();
+                        
+                        SchemaExport exporter = new SchemaExport();
+                        
+                        exporter.setDelimiter(";");
+                        exporter.setFormat(true);
+                        exporter.setOutputFile(destinationFilename.toString());
+                        exporter.create(EnumSet.of(TargetType.SCRIPT), sources.buildMetadata());
+                        
+                        content = FileUtil.fromTextFile(destinationFilename.toString());
+                        content = StringUtil.replaceAll(content, " engine=InnoDB", "");
+                        
+                        if(content != null && content.length() > 0){
+                            StringBuilder contentBuffer = new StringBuilder();
+                            int pos = content.toLowerCase().indexOf("create table");
+                            
+                            if(pos >= 0){
+                                content = content.substring(pos);
+                                
+                                String indentation = StringUtil.replicate(Constants.DEFAULT_INDENT_CHARACTER, Constants.DEFAULT_INDENT_SIZE);
+                                
+                                if(indentation != null && indentation.length() > 0)
+                                    contentBuffer.append(indentation);
+                                
+                                contentBuffer.append(content);
+                            }
+                            else
+                                contentBuffer.append(content);
+                            
+                            content = contentBuffer.toString();
+                        }
+                    }
+                }
+            }
+            
+            return content;
+        }
+        catch(IOException | InvalidResourcesException e){
+            throw new InternalErrorException(e);
+        }
     }
 }

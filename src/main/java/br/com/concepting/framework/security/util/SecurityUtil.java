@@ -6,14 +6,14 @@ import br.com.concepting.framework.model.SystemModuleModel;
 import br.com.concepting.framework.model.SystemSessionModel;
 import br.com.concepting.framework.model.helpers.ModelInfo;
 import br.com.concepting.framework.model.util.ModelUtil;
+import br.com.concepting.framework.security.annotations.Security;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.model.LoginParameterModel;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
-import br.com.concepting.framework.security.resources.SecurityResources;
-import br.com.concepting.framework.security.resources.SecurityResourcesLoader;
 import br.com.concepting.framework.security.util.interfaces.ICrypto;
 import br.com.concepting.framework.util.ByteUtil;
+import br.com.concepting.framework.util.ReflectionUtil;
 import br.com.concepting.framework.util.StringUtil;
 import br.com.concepting.framework.util.helpers.PropertyInfo;
 import org.apache.commons.beanutils.ConstructorUtils;
@@ -27,6 +27,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -53,6 +55,68 @@ import java.util.UUID;
 public class SecurityUtil{
     private static final SecureRandom secureRandom = new SecureRandom();
     
+    public static Class<? extends LoginSessionModel> getLoginSessionClass(){
+        Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(Security.class);
+    
+        if(classes != null && !classes.isEmpty()){
+            try{
+                return classes.parallelStream().map(c -> (Class<? extends LoginSessionModel>) c).findFirst().get();
+            }
+            catch(Throwable e){
+            }
+        }
+        
+        return LoginSessionModel.class;
+    }
+    
+    public static Integer getLoginSessionTimeout(){
+        Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(Security.class);
+    
+        if(classes != null && !classes.isEmpty()){
+            try{
+                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).findFirst().get();
+    
+                return security.loginSessionTimeout();
+            }
+            catch(Throwable e){
+            }
+        }
+        
+        return SecurityConstants.DEFAULT_LOGIN_SESSION_TIMEOUT;
+    }
+    
+    public static String getCryptoAlgorithm(){
+        Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(Security.class);
+    
+        if(classes != null && !classes.isEmpty()){
+            try{
+                Security security = classes.parallelStream().filter(LoginSessionModel.class::isInstance).map(c -> c.getAnnotation(Security.class)).findFirst().get();
+            
+                return security.cryptoAlgorithm();
+            }
+            catch(Throwable e){
+            }
+        }
+    
+        return SecurityConstants.DEFAULT_CRYPTO_ALGORITHM_ID;
+    }
+    
+    public static Integer getCryptoKeySize(){
+        Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(Security.class);
+        
+        if(classes != null && !classes.isEmpty()){
+            try{
+                Security security = classes.parallelStream().filter(LoginSessionModel.class::isInstance).map(c -> c.getAnnotation(Security.class)).findFirst().get();
+                
+                return security.cryptoKeySIze();
+            }
+            catch(Throwable e){
+            }
+        }
+        
+        return SecurityConstants.DEFAULT_CRYPTO_KEY_SIZE;
+    }
+
     /**
      * Generated a secure token.
      *
@@ -103,22 +167,15 @@ public class SecurityUtil{
      */
     public static String encryptPassword(String password) throws InternalErrorException{
         try{
-            SecurityResourcesLoader loader = new SecurityResourcesLoader();
-            SecurityResources resources = loader.getDefault();
+            String cryptographyAlgorithm = getCryptoAlgorithm();
+            Integer cryptographyKeySize = getCryptoKeySize();
+            CryptoDigest digest = new CryptoDigest(true);
+            String cryptographyKey = digest.encrypt(password);
+            ICrypto crypto = CryptoFactory.getInstance(cryptographyAlgorithm, cryptographyKey, cryptographyKeySize, true);
             
-            if(resources != null){
-                String cryptographyAlgorithm = resources.getCriptographyAlgorithm();
-                Integer cryptographyKeySize = resources.getCriptographyKeySize();
-                CryptoDigest digest = new CryptoDigest(true);
-                String cryptographyKey = digest.encrypt(password);
-                ICrypto crypto = CryptoFactory.getInstance(cryptographyAlgorithm, cryptographyKey, cryptographyKeySize, true);
-                
-                password = crypto.encrypt(password);
-                
-                return password;
-            }
+            password = crypto.encrypt(password);
             
-            return null;
+            return password;
         }
         catch(IllegalBlockSizeException | BadPaddingException | UnsupportedEncodingException | InvalidKeyException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeySpecException e){
             throw new InternalErrorException(e);
@@ -196,15 +253,8 @@ public class SecurityUtil{
     @SuppressWarnings("unchecked")
     public static <L extends LoginSessionModel> L getLoginSession(String resourcesDirname, L loginSession) throws InternalErrorException{
         try{
-            if(loginSession == null){
-                SecurityResourcesLoader securityResourceloader = new SecurityResourcesLoader(resourcesDirname);
-                SecurityResources resources = securityResourceloader.getDefault();
-                
-                if(resources == null || resources.getLoginSessionClass() == null)
-                    loginSession = (L) new LoginSessionModel();
-                else
-                    loginSession = (L) ConstructorUtils.invokeConstructor(resources.getLoginSessionClass(), null);
-            }
+            if(loginSession == null)
+                loginSession = (L) ConstructorUtils.invokeConstructor(getLoginSessionClass(), null);
             
             UserModel user = loginSession.getUser();
             Class<L> loginSessionClass = (Class<L>) loginSession.getClass();

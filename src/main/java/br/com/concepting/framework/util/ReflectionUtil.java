@@ -5,10 +5,8 @@ import br.com.concepting.framework.caching.Cacher;
 import br.com.concepting.framework.caching.CacherManager;
 import br.com.concepting.framework.model.exceptions.ItemAlreadyExistsException;
 import br.com.concepting.framework.model.exceptions.ItemNotFoundException;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
-import br.com.concepting.framework.resources.exceptions.InvalidResourcesException;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import org.reflections.scanners.TypeAnnotationsScanner;
 
 import java.lang.annotation.Annotation;
@@ -27,25 +25,19 @@ public class ReflectionUtil{
             types = (Set<Class<?>>)object.getContent();
         }
         catch(ItemNotFoundException e){
+            Reflections reflections = new Reflections("", new TypeAnnotationsScanner(), new SubTypesScanner());
+            
+            types = reflections.getTypesAnnotatedWith(annotation);
+            
+            CachedObject object = new CachedObject();
+            
+            object.setId(annotation.getName());
+            object.setContent(types);
+            
             try{
-                SystemResourcesLoader loader = new SystemResourcesLoader();
-                SystemResources resources = loader.getDefault();
-                Reflections reflections = new Reflections(resources.getPackagesPrefix(), new TypeAnnotationsScanner());
-                
-                types = reflections.getTypesAnnotatedWith(annotation);
-                
-                CachedObject object = new CachedObject();
-                
-                object.setId(annotation.getName());
-                object.setContent(types);
-                
-                try{
-                    cacher.add(object);
-                }
-                catch(ItemAlreadyExistsException e1){
-                }
+                cacher.add(object);
             }
-            catch(InvalidResourcesException e1){
+            catch(ItemAlreadyExistsException e1){
             }
         }
     

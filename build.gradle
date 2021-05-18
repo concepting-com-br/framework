@@ -116,15 +116,15 @@ dependencies{
 	compile "javax.validation:validation-api:2.0.1.Final"
 	compile "javax.servlet.jsp:javax.servlet.jsp-api:2.3.3"
 	compile "javax.servlet:javax.servlet-api:4.0.1"
-	
-    testImplementation "junit:junit:4.13"
+
+	testImplementation "junit:junit:4.13"
 }
 
 ext.coreExcludes = []
 
 task modelJar(type: Jar){
-	archiveClassifier = "model"
-	duplicatesStrategy = "exclude"
+	archiveClassifier.set("model")
+	duplicatesStrategy = "EXCLUDE"
     exclude "META-INF/**"
 	exclude "**/*.html"
     from(sourceSets.main.output){  
@@ -134,8 +134,8 @@ task modelJar(type: Jar){
 }
 
 task controllerJar(type: Jar){
-	archiveClassifier = "controller"
-	duplicatesStrategy = "exclude"
+	archiveClassifier.set("controller")
+	duplicatesStrategy = "EXCLUDE"
     exclude "META-INF/**"
 	exclude "**/*.html"
     from(sourceSets.main.output){  
@@ -145,8 +145,8 @@ task controllerJar(type: Jar){
 }
 
 task persistenceJar(type: Jar){
-	archiveClassifier = "persistence"
-	duplicatesStrategy = "exclude"
+	archiveClassifier.set("persistence")
+	duplicatesStrategy = "EXCLUDE"
     exclude "META-INF/**"
 	exclude "**/*.html"
     from(sourceSets.main.output){  
@@ -156,8 +156,8 @@ task persistenceJar(type: Jar){
 }
 
 task serviceJar(type: Jar){
-	archiveClassifier = "service"
-	duplicatesStrategy = "exclude"
+	archiveClassifier.set("service")
+	duplicatesStrategy = "EXCLUDE"
     exclude "META-INF/**"
 	exclude "**/*.html"
     from(sourceSets.main.output){  
@@ -167,8 +167,8 @@ task serviceJar(type: Jar){
 }
 
 task uiJar(type: Jar){
-	archiveClassifier = "ui"
-	duplicatesStrategy = "exclude"
+	archiveClassifier.set("ui")
+	duplicatesStrategy = "EXCLUDE"
     exclude "META-INF/**"
 	exclude "**/*.html"
     from(sourceSets.main.output){  
@@ -178,8 +178,8 @@ task uiJar(type: Jar){
 }
 
 task resourcesJar(type: Jar){
-	archiveClassifier = "resources"
-	duplicatesStrategy = "exclude"
+	archiveClassifier.set("resources")
+	duplicatesStrategy = "EXCLUDE"
     exclude "META-INF/**"
 	exclude "**/*.html"
     from(sourceSets.main.output){  
@@ -191,8 +191,8 @@ task resourcesJar(type: Jar){
 }
 
 task coreJar(type: Jar){
-	archiveClassifier = "core"
-	duplicatesStrategy = "exclude"
+	archiveClassifier.set("core")
+	duplicatesStrategy = "EXCLUDE"
     exclude "META-INF/**"
 	exclude "**/*.html"
     from(sourceSets.main.output){  
@@ -203,11 +203,19 @@ task coreJar(type: Jar){
 jar{
     exclude "META-INF/**"
 	exclude "**/*.html"
-    duplicatesStrategy = 'exclude'
+    duplicatesStrategy = "EXCLUDE"
+}
+
+task allJar(type: Jar) {
+	archiveClassifier.set("all")
+	duplicatesStrategy = "EXCLUDE"
+	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+	with jar
 }
 
 task javadocJar(type: Jar){
-	archiveClassifier = "javadoc"
+	archiveClassifier.set("javadoc")
+	duplicatesStrategy = "EXCLUDE"
     from javadoc
 }
 
@@ -219,6 +227,8 @@ artifacts{
 	archives uiJar
 	archives resourcesJar
 	archives coreJar
+	archives javadocJar
+	archives allJar
 }
 
 publishing{
@@ -233,6 +243,7 @@ publishing{
 			artifact resourcesJar
 			artifact coreJar
  			artifact javadocJar
+			artifact allJar
         }
     }
 }

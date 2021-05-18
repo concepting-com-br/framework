@@ -8,6 +8,7 @@ import br.com.concepting.framework.model.annotations.Model;
 import br.com.concepting.framework.model.annotations.Property;
 import br.com.concepting.framework.persistence.types.RelationJoinType;
 import br.com.concepting.framework.persistence.types.RelationType;
+import br.com.concepting.framework.security.annotations.Security;
 import br.com.concepting.framework.util.helpers.DateTime;
 import br.com.concepting.framework.util.types.SortOrderType;
 
@@ -35,6 +36,7 @@ import br.com.concepting.framework.util.types.SortOrderType;
  */
 @Auditable
 @Model(ui = "Login Session", templateId = "loginSession", generateWebService = true)
+@Security
 public class LoginSessionModel extends BaseModel{
     private static final long serialVersionUID = -8507789965528582224L;
     

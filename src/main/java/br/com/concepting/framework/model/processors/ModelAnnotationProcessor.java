@@ -5,14 +5,10 @@ import br.com.concepting.framework.audit.resources.AuditorResources;
 import br.com.concepting.framework.audit.resources.AuditorResourcesLoader;
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.constants.ProjectConstants;
-import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.action.BaseAction;
 import br.com.concepting.framework.controller.form.BaseActionForm;
-import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
-import br.com.concepting.framework.controller.form.util.ActionFormUtil;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.BaseModel;
-import br.com.concepting.framework.model.MainConsoleModel;
 import br.com.concepting.framework.model.SystemModuleModel;
 import br.com.concepting.framework.model.SystemSessionModel;
 import br.com.concepting.framework.model.helpers.ModelInfo;
@@ -27,14 +23,11 @@ import br.com.concepting.framework.processors.annotations.Tag;
 import br.com.concepting.framework.processors.constants.ProcessorConstants;
 import br.com.concepting.framework.processors.helpers.ProjectBuild;
 import br.com.concepting.framework.resources.FactoryResources;
-import br.com.concepting.framework.resources.SystemResources;
-import br.com.concepting.framework.resources.SystemResourcesLoader;
 import br.com.concepting.framework.resources.constants.ResourcesConstants;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
 import br.com.concepting.framework.security.util.SecurityUtil;
-import br.com.concepting.framework.service.constants.ServiceConstants;
 import br.com.concepting.framework.service.interfaces.IService;
 import br.com.concepting.framework.service.util.ServiceUtil;
 import br.com.concepting.framework.ui.constants.UIConstants;
@@ -48,6 +41,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.DocumentType;
 import org.dom4j.tree.DefaultDocumentType;
 
+import javax.tools.Diagnostic;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -56,7 +50,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Class that defines the data model processor.
@@ -164,7 +157,6 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
         StringBuilder templateFilesDirname = new StringBuilder();
         
         templateFilesDirname.append(this.build.getBaseDirname());
-        templateFilesDirname.append(FileUtil.getDirectorySeparator());
         templateFilesDirname.append(ProjectConstants.DEFAULT_TEMPLATES_DIR);
         templateFilesDirname.append(this.modelInfo.getTemplateId());
         
@@ -173,6 +165,7 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
         if(templateFilesDir.exists()){
             Method[] templateMethods = getClass().getMethods();
             File[] templateFiles = templateFilesDir.listFiles();
+    
             AuditorResourcesLoader loader = new AuditorResourcesLoader(this.build.getResourcesDirname());
             AuditorResources auditorResources = loader.getDefault();
             Auditor auditor = null;
@@ -190,7 +183,7 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                                 auditor = new Auditor(entity, business, new Object[]{this.modelInfo.getClazz().getName()}, loginSession, auditorResources);
                                 auditor.start();
                             }
-                            
+    
                             templateMethod.invoke(this, templateFile.getAbsolutePath());
                             
                             if(auditor != null)
@@ -200,12 +193,14 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                     catch(Throwable e){
                         if(auditor != null)
                             auditor.end(e);
+                        else
+                            getAnnotationProcessorFactory().getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,ExceptionUtil.getTrace(e));
                     }
                 }
             }
-            
-            updatePersistenceResources();
         }
+        else
+            getAnnotationProcessorFactory().getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR, "No templates found in ".concat(templateFilesDir.getAbsolutePath()).concat("!"));
     }
     
     /**
@@ -516,8 +511,6 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                             
                             if(modelClassContent != null && modelClassContent.length() > 0)
                                 FileUtil.toTextFile(modelClassFilename.toString(), modelClassContent, encoding);
-                            
-                            addCheckGeneratedCode(modelClassName.toString());
                         }
                         else{
                             if((this.modelInfo.generatePersistence() == null || !this.modelInfo.generatePersistence()) && (this.modelInfo.generateService() == null || !this.modelInfo.generateService()))
@@ -642,89 +635,84 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
             List<XmlNode> resourcesTemplateArtifactsNode = resourcesTemplateNode.getChildren();
             
             if(resourcesTemplateArtifactsNode != null && !resourcesTemplateArtifactsNode.isEmpty()){
-                SystemResourcesLoader systemResourcesLoader = new SystemResourcesLoader(this.build.getResourcesDirname());
-                SystemResources systemResources = systemResourcesLoader.getDefault();
+                Collection<String> availableLanguages = LanguageUtil.getAvailableLanguages();
                 
-                if(systemResources != null){
-                    Collection<Locale> availableLanguages = systemResources.getLanguages();
+                if(availableLanguages != null && !availableLanguages.isEmpty()){
+                    ProcessorFactory processorFactory = ProcessorFactory.getInstance();
+                    ExpressionProcessor expressionProcessor = new ExpressionProcessor(this.modelInfo);
                     
-                    if(availableLanguages != null && !availableLanguages.isEmpty()){
-                        ProcessorFactory processorFactory = ProcessorFactory.getInstance();
-                        ExpressionProcessor expressionProcessor = new ExpressionProcessor(this.modelInfo);
+                    for(XmlNode resourcesTemplateArtifactNode: resourcesTemplateArtifactsNode){
+                        String outputDir = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.OUTPUT_DIRECTORY_ATTRIBUTE_ID));
+                        String packagePrefix = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.PACKAGE_PREFIX_ATTRIBUTE_ID));
+                        String packageName = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.PACKAGE_NAME_ATTRIBUTE_ID));
+                        String packageSuffix = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.PACKAGE_SUFFIX_ATTRIBUTE_ID));
+                        String name = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.NAME_ATTRIBUTE_ID));
+                        StringBuilder packageNameBuffer = new StringBuilder();
                         
-                        for(XmlNode resourcesTemplateArtifactNode: resourcesTemplateArtifactsNode){
-                            String outputDir = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.OUTPUT_DIRECTORY_ATTRIBUTE_ID));
-                            String packagePrefix = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.PACKAGE_PREFIX_ATTRIBUTE_ID));
-                            String packageName = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.PACKAGE_NAME_ATTRIBUTE_ID));
-                            String packageSuffix = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.PACKAGE_SUFFIX_ATTRIBUTE_ID));
-                            String name = expressionProcessor.evaluate(resourcesTemplateArtifactNode.getAttribute(Constants.NAME_ATTRIBUTE_ID));
-                            StringBuilder packageNameBuffer = new StringBuilder();
+                        if(packagePrefix != null && packagePrefix.length() > 0)
+                            packageNameBuffer.append(packagePrefix);
+                        
+                        if(packageName != null && packageName.length() > 0){
+                            if(packageNameBuffer.length() > 0)
+                                packageNameBuffer.append(".");
                             
-                            if(packagePrefix != null && packagePrefix.length() > 0)
-                                packageNameBuffer.append(packagePrefix);
+                            packageNameBuffer.append(packageName);
+                        }
+                        
+                        if(packageSuffix != null && packageSuffix.length() > 0){
+                            if(packageNameBuffer.length() > 0)
+                                packageNameBuffer.append(".");
                             
-                            if(packageName != null && packageName.length() > 0){
-                                if(packageNameBuffer.length() > 0)
-                                    packageNameBuffer.append(".");
-                                
-                                packageNameBuffer.append(packageName);
+                            packageNameBuffer.append(packageSuffix);
+                        }
+                        
+                        packageName = packageNameBuffer.toString();
+                        
+                        StringBuilder resourcesName = new StringBuilder();
+                        
+                        if(packageName != null && packageName.length() > 0){
+                            resourcesName.append(packageName);
+                            resourcesName.append(".");
+                        }
+                        
+                        resourcesName.append(name);
+                        
+                        for(String availableLanguage: availableLanguages){
+                            StringBuilder resourcesFilename = new StringBuilder();
+                            
+                            if(outputDir != null && outputDir.length() > 0){
+                                resourcesFilename.append(outputDir);
+                                resourcesFilename.append(FileUtil.getDirectorySeparator());
+                            }
+                            else{
+                                resourcesFilename.append(this.build.getBaseDirname());
+                                resourcesFilename.append(FileUtil.getDirectorySeparator());
+                                resourcesFilename.append(ProjectConstants.DEFAULT_RESOURCES_DIR);
                             }
                             
-                            if(packageSuffix != null && packageSuffix.length() > 0){
-                                if(packageNameBuffer.length() > 0)
-                                    packageNameBuffer.append(".");
-                                
-                                packageNameBuffer.append(packageSuffix);
+                            resourcesFilename.append(StringUtil.replaceAll(resourcesName.toString(), ".", FileUtil.getDirectorySeparator()));
+                            resourcesFilename.append("_");
+                            resourcesFilename.append(availableLanguage);
+                            resourcesFilename.append(ResourcesConstants.DEFAULT_PROPERTIES_RESOURCES_FILE_EXTENSION);
+                            
+                            File resourcesFile = new File(resourcesFilename.toString());
+                            
+                            if(!resourcesFile.exists()){
+                                if((this.modelInfo.generateWebService() != null && this.modelInfo.generateWebService()) || (this.modelInfo.generateService() != null && this.modelInfo.generateService()) || (this.modelInfo.generateUi() != null && this.modelInfo.generateUi()) || (this.modelInfo.generateActionsAndForm() != null && this.modelInfo.generateActionsAndForm())){
+                                    ExpressionProcessorUtil.setVariable(Constants.PACKAGE_PREFIX_ATTRIBUTE_ID, packagePrefix);
+                                    ExpressionProcessorUtil.setVariable(Constants.PACKAGE_SUFFIX_ATTRIBUTE_ID, packageSuffix);
+                                    ExpressionProcessorUtil.setVariable(Constants.PACKAGE_NAME_ATTRIBUTE_ID, packageName);
+                                    ExpressionProcessorUtil.setVariable(Constants.NAME_ATTRIBUTE_ID, name);
+                                    
+                                    GenericProcessor processor = processorFactory.getProcessor(this.modelInfo, resourcesTemplateArtifactNode);
+                                    String resourcesContent = StringUtil.indent(processor.process(), JavaIndent.getRules());
+                                    
+                                    FileUtil.toTextFile(resourcesFilename.toString(), resourcesContent, encoding);
+                                }
                             }
-                            
-                            packageName = packageNameBuffer.toString();
-                            
-                            StringBuilder resourcesName = new StringBuilder();
-                            
-                            if(packageName != null && packageName.length() > 0){
-                                resourcesName.append(packageName);
-                                resourcesName.append(".");
-                            }
-                            
-                            resourcesName.append(name);
-                            
-                            for(Locale availableLanguage: availableLanguages){
-                                StringBuilder resourcesFilename = new StringBuilder();
-                                
-                                if(outputDir != null && outputDir.length() > 0){
-                                    resourcesFilename.append(outputDir);
-                                    resourcesFilename.append(FileUtil.getDirectorySeparator());
-                                }
-                                else{
-                                    resourcesFilename.append(this.build.getBaseDirname());
-                                    resourcesFilename.append(FileUtil.getDirectorySeparator());
-                                    resourcesFilename.append(ProjectConstants.DEFAULT_RESOURCES_DIR);
-                                }
-                                
-                                resourcesFilename.append(StringUtil.replaceAll(resourcesName.toString(), ".", FileUtil.getDirectorySeparator()));
-                                resourcesFilename.append("_");
-                                resourcesFilename.append(availableLanguage);
-                                resourcesFilename.append(ResourcesConstants.DEFAULT_PROPERTIES_RESOURCES_FILE_EXTENSION);
-                                
-                                File resourcesFile = new File(resourcesFilename.toString());
-                                
-                                if(!resourcesFile.exists()){
-                                    if((this.modelInfo.generateWebService() != null && this.modelInfo.generateWebService()) || (this.modelInfo.generateService() != null && this.modelInfo.generateService()) || (this.modelInfo.generateUi() != null && this.modelInfo.generateUi()) || (this.modelInfo.generateActionsAndForm() != null && this.modelInfo.generateActionsAndForm())){
-                                        ExpressionProcessorUtil.setVariable(Constants.PACKAGE_PREFIX_ATTRIBUTE_ID, packagePrefix);
-                                        ExpressionProcessorUtil.setVariable(Constants.PACKAGE_SUFFIX_ATTRIBUTE_ID, packageSuffix);
-                                        ExpressionProcessorUtil.setVariable(Constants.PACKAGE_NAME_ATTRIBUTE_ID, packageName);
-                                        ExpressionProcessorUtil.setVariable(Constants.NAME_ATTRIBUTE_ID, name);
-                                        
-                                        GenericProcessor processor = processorFactory.getProcessor(this.modelInfo, resourcesTemplateArtifactNode);
-                                        String resourcesContent = StringUtil.indent(processor.process(), JavaIndent.getRules());
-                                        
-                                        FileUtil.toTextFile(resourcesFilename.toString(), resourcesContent, encoding);
-                                    }
-                                }
-                                else{
-                                    if((this.modelInfo.generateWebService() == null || !this.modelInfo.generateWebService()) && (this.modelInfo.generateService() == null || !this.modelInfo.generateService()) && (this.modelInfo.generateUi() == null || !this.modelInfo.generateUi()) && (this.modelInfo.generateActionsAndForm() == null || !this.modelInfo.generateActionsAndForm()))
-                                        resourcesFile.delete();
-                                }
+                            else{
+                                if((this.modelInfo.generateWebService() == null || !this.modelInfo.generateWebService()) && (this.modelInfo.generateService() == null || !this.modelInfo.generateService()) && (this.modelInfo.generateUi() == null || !this.modelInfo.generateUi()) && (this.modelInfo.generateActionsAndForm() == null || !this.modelInfo.generateActionsAndForm()))
+                                    resourcesFile.delete();
                             }
                         }
                     }
@@ -1036,62 +1024,6 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
             }
         }
         catch(IOException | DocumentException e){
-            throw new InternalErrorException(e);
-        }
-    }
-    
-    /**
-     * Updates the persistence resources.
-     *
-     * @throws InternalErrorException Occurs when was not possible to execute
-     * the operation.
-     */
-    private void updatePersistenceResources() throws InternalErrorException{
-        try{
-            StringBuilder persistenceResourcesFilename = new StringBuilder();
-            
-            persistenceResourcesFilename.append(this.build.getResourcesDirname());
-            persistenceResourcesFilename.append(FileUtil.getDirectorySeparator());
-            persistenceResourcesFilename.append(PersistenceConstants.DEFAULT_RESOURCES_ID);
-            
-            File persistenceResourcesFile = new File(persistenceResourcesFilename.toString());
-            XmlReader persistenceResourcesReader = new XmlReader(persistenceResourcesFile);
-            XmlNode persistenceResourcesNode = persistenceResourcesReader.getRoot();
-            XmlNode persistenceResourcesMappingsNode = persistenceResourcesNode.getNode(PersistenceConstants.MAPPINGS_ATTRIBUTE_ID);
-            
-            if(persistenceResourcesMappingsNode != null)
-                persistenceResourcesNode.removeChild(persistenceResourcesMappingsNode);
-            
-            persistenceResourcesMappingsNode = new XmlNode(PersistenceConstants.MAPPINGS_ATTRIBUTE_ID);
-            
-            StringBuilder persistenceMappingDirName = new StringBuilder();
-            
-            persistenceMappingDirName.append(this.build.getResourcesDirname());
-            persistenceMappingDirName.append(FileUtil.getDirectorySeparator());
-            persistenceMappingDirName.append(PersistenceConstants.DEFAULT_MAPPINGS_DIR);
-            
-            File persistenceMappingDir = new File(persistenceMappingDirName.toString());
-            
-            if(persistenceMappingDir.exists()){
-                File[] persistenceMappingFiles = persistenceMappingDir.listFiles();
-                
-                if(persistenceMappingFiles != null && persistenceMappingFiles.length > 0){
-                    for(File persistenceMappingFile: persistenceMappingFiles){
-                        String modelClassName = StringUtil.replaceAll(persistenceMappingFile.getName(), PersistenceConstants.DEFAULT_MAPPING_FILE_EXTENSION, "");
-                        XmlNode persistenceResourcesMappingNode = new XmlNode(PersistenceConstants.MAPPING_ATTRIBUTE_ID, modelClassName);
-                        
-                        persistenceResourcesMappingsNode.addChild(persistenceResourcesMappingNode);
-                    }
-                }
-            }
-            
-            persistenceResourcesNode.addChild(persistenceResourcesMappingsNode);
-            
-            XmlWriter persistenceResourcesWriter = new XmlWriter(persistenceResourcesFile, persistenceResourcesReader.getDocumentType(), persistenceResourcesReader.getEncoding());
-            
-            persistenceResourcesWriter.write(persistenceResourcesNode);
-        }
-        catch(DocumentException | IOException e){
             throw new InternalErrorException(e);
         }
     }
@@ -1539,6 +1471,105 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
     }
     
     /**
+     * Generates the persistence structure.
+     *
+     * @param persistenceStructureTemplateFilename String that contains the persistence class template filename.
+     * @throws InternalErrorException Occurs when was not possible to generate
+     * the class.
+     */
+    @Tag(ProjectConstants.DEFAULT_PERSISTENCE_STRUCTURE_TEMPLATE_FILE_ID)
+    public void generatePersistenceStructure(String persistenceStructureTemplateFilename) throws InternalErrorException{
+        try{
+            File persistenceStructureTemplateFile = new File(persistenceStructureTemplateFilename);
+            XmlReader persistenceStructureTemplateReader = new XmlReader(persistenceStructureTemplateFile);
+            String encoding = persistenceStructureTemplateReader.getEncoding();
+            XmlNode persistenceStructureTemplateNode = persistenceStructureTemplateReader.getRoot();
+            List<XmlNode> persistenceStructureTemplateArtifactsNode = persistenceStructureTemplateNode.getChildren();
+            
+            if(persistenceStructureTemplateArtifactsNode != null && !persistenceStructureTemplateArtifactsNode.isEmpty()){
+                ProcessorFactory processorFactory = ProcessorFactory.getInstance();
+                ExpressionProcessor expressionProcessor = new ExpressionProcessor(this.modelInfo);
+                
+                for(XmlNode persistenceStructureTemplateArtifactNode: persistenceStructureTemplateArtifactsNode){
+                    String outputDir = expressionProcessor.evaluate(persistenceStructureTemplateArtifactNode.getAttribute(Constants.OUTPUT_DIRECTORY_ATTRIBUTE_ID));
+                    String packagePrefix = expressionProcessor.evaluate(persistenceStructureTemplateArtifactNode.getAttribute(Constants.PACKAGE_PREFIX_ATTRIBUTE_ID));
+                    String packageName = expressionProcessor.evaluate(persistenceStructureTemplateArtifactNode.getAttribute(Constants.PACKAGE_NAME_ATTRIBUTE_ID));
+                    String packageSuffix = expressionProcessor.evaluate(persistenceStructureTemplateArtifactNode.getAttribute(Constants.PACKAGE_SUFFIX_ATTRIBUTE_ID));
+                    String name = expressionProcessor.evaluate(persistenceStructureTemplateArtifactNode.getAttribute(Constants.NAME_ATTRIBUTE_ID));
+                    StringBuilder packageNameBuffer = new StringBuilder();
+                    
+                    if(packagePrefix != null && packagePrefix.length() > 0)
+                        packageNameBuffer.append(packagePrefix);
+                    
+                    if(packageName != null && packageName.length() > 0){
+                        if(packageNameBuffer.length() > 0)
+                            packageNameBuffer.append(".");
+                        
+                        packageNameBuffer.append(packageName);
+                    }
+                    
+                    if(packageSuffix != null && packageSuffix.length() > 0){
+                        if(packageNameBuffer.length() > 0)
+                            packageNameBuffer.append(".");
+                        
+                        packageNameBuffer.append(packageSuffix);
+                    }
+                    
+                    packageName = packageNameBuffer.toString();
+                    
+                    StringBuilder persistenceStructureName = new StringBuilder();
+                    
+                    if(packageName != null && packageName.length() > 0){
+                        persistenceStructureName.append(packageName);
+                        persistenceStructureName.append(".");
+                    }
+                    
+                    persistenceStructureName.append(name);
+                    
+                    StringBuilder persistenceStructureFilename = new StringBuilder();
+                    
+                    if(outputDir != null && outputDir.length() > 0){
+                        persistenceStructureFilename.append(outputDir);
+                        persistenceStructureFilename.append(FileUtil.getDirectorySeparator());
+                    }
+                    else{
+                        persistenceStructureFilename.append(this.build.getBaseDirname());
+                        persistenceStructureFilename.append(FileUtil.getDirectorySeparator());
+                        persistenceStructureFilename.append(ProjectConstants.DEFAULT_PERSISTENCE_DIR);
+                    }
+                    
+                    persistenceStructureFilename.append(StringUtil.replaceAll(persistenceStructureName.toString(), ".", FileUtil.getDirectorySeparator()));
+                    persistenceStructureFilename.append(PersistenceConstants.DEFAULT_FILE_EXTENSION);
+                    
+                    File persistenceStructureFile = new File(persistenceStructureFilename.toString());
+                    
+                    if(!persistenceStructureFile.exists()){
+                        if((this.modelInfo.generatePersistence() != null && this.modelInfo.generatePersistence()) || (this.modelInfo.generateService() != null && this.modelInfo.generateService())){
+                            ExpressionProcessorUtil.setVariable(Constants.PACKAGE_PREFIX_ATTRIBUTE_ID, packagePrefix);
+                            ExpressionProcessorUtil.setVariable(Constants.PACKAGE_SUFFIX_ATTRIBUTE_ID, packageSuffix);
+                            ExpressionProcessorUtil.setVariable(Constants.PACKAGE_NAME_ATTRIBUTE_ID, packageName);
+                            ExpressionProcessorUtil.setVariable(Constants.NAME_ATTRIBUTE_ID, name);
+                            
+                            GenericProcessor processor = processorFactory.getProcessor(this.modelInfo, persistenceStructureTemplateArtifactNode);
+                            String persistenceStructureContent = processor.process();
+                            
+                            if(persistenceStructureContent != null && persistenceStructureContent.length() > 0)
+                                FileUtil.toTextFile(persistenceStructureFilename.toString(), persistenceStructureContent, encoding);
+                        }
+                    }
+                    else{
+                        if((this.modelInfo.generatePersistence() == null || !this.modelInfo.generatePersistence()) && (this.modelInfo.generateService() == null || !this.modelInfo.generateService()))
+                            persistenceStructureFile.delete();
+                    }
+                }
+            }
+        }
+        catch(IOException e){
+            throw new InternalErrorException(e);
+        }
+    }
+    
+    /**
      * Generates the persistence data.
      *
      * @param persistenceDataTemplateFilename String that contains the persistence data template filename.
@@ -1719,9 +1750,13 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                         uiPageDirname.append(outputDir);
                         uiPageDirname.append(FileUtil.getDirectorySeparator());
                     }
-                    
-                    uiPageDirname.append(ProjectConstants.DEFAULT_UI_DIR);
-                    uiPageDirname.append(actionFormUrl);
+                    else{
+                        uiPageDirname.append(this.build.getBaseDirname());
+                        uiPageDirname.append(FileUtil.getDirectorySeparator());
+                        uiPageDirname.append(ProjectConstants.DEFAULT_UI_DIR);
+                    }
+    
+                    uiPageDirname.append(actionFormUrl.substring(1));
                     uiPageDir = new File(uiPageDirname.toString());
                     
                     if(outputDir != null && outputDir.length() > 0){
@@ -1760,63 +1795,58 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                     uiPageStyleFilename.append(UIConstants.DEFAULT_PAGE_STYLE_RESOURCES_ID);
                     uiPageStyleFile = new File(uiPageStyleFilename.toString());
                     
-                    if(!uiPageFile.exists() || !uiPageDir.exists() || !uiPageImagesDir.exists() || !uiPageStylesDir.exists() || !uiPageScriptsDir.exists() || !uiPageScriptFile.exists() || !uiPageStyleFile.exists()){
-                        if(this.modelInfo.generateUi() != null && this.modelInfo.generateUi()){
-                            if(!uiPageDir.exists())
-                                uiPageDir.mkdirs();
+                    if(this.modelInfo.generateUi() != null && this.modelInfo.generateUi()){
+                        if(!uiPageDir.exists())
+                            uiPageDir.mkdirs();
+                        
+                        if(!uiPageImagesDir.exists())
+                            uiPageImagesDir.mkdirs();
+                        
+                        if(!uiPageScriptsDir.exists())
+                            uiPageScriptsDir.mkdirs();
+                        
+                        if(!uiPageStylesDir.exists())
+                            uiPageStylesDir.mkdirs();
+                        
+                        if(!uiPageScriptFile.exists())
+                            FileUtil.toTextFile(uiPageScriptFilename.toString(), "");
+                        
+                        if(!uiPageStyleFile.exists())
+                            FileUtil.toTextFile(uiPageStyleFile.toString(), "");
+                        
+                        if(!uiPageFile.exists()){
+                            GenericProcessor processor = processorFactory.getProcessor(this.modelInfo, uiPageTemplateArtifactNode);
+                            String uiPageContent = StringUtil.indent(processor.process(), JspIndent.getRules());
                             
-                            if(!uiPageImagesDir.exists())
-                                uiPageImagesDir.mkdirs();
-                            
-                            if(!uiPageScriptsDir.exists())
-                                uiPageScriptsDir.mkdirs();
-                            
-                            if(!uiPageStylesDir.exists())
-                                uiPageStylesDir.mkdirs();
-                            
-                            if(!uiPageScriptFile.exists())
-                                FileUtil.toTextFile(new FileOutputStream(uiPageScriptFile), "");
-                            
-                            if(!uiPageStyleFile.exists())
-                                FileUtil.toTextFile(new FileOutputStream(uiPageStyleFile), "");
-                            
-                            if(!uiPageFile.exists()){
-                                GenericProcessor processor = processorFactory.getProcessor(this.modelInfo, uiPageTemplateArtifactNode);
-                                String uiPageContent = StringUtil.indent(processor.process(), JspIndent.getRules());
-                                
-                                if(uiPageContent != null && uiPageContent.length() > 0)
-                                    FileUtil.toTextFile(uiPageFilename.toString(), uiPageContent, encoding);
-                            }
+                            if(uiPageContent != null && uiPageContent.length() > 0)
+                                FileUtil.toTextFile(uiPageFilename.toString(), uiPageContent, encoding);
                         }
-                        else{
-                            if(this.modelInfo.generateUi() == null || !this.modelInfo.generateUi()){
-                                if(uiPageFile.exists())
-                                    uiPageFile.delete();
-                                
-                                if(uiPageScriptFile.exists())
-                                    uiPageScriptFile.delete();
-                                
-                                if(uiPageStyleFile.exists())
-                                    uiPageStyleFile.delete();
-                                
-                                if(uiPageImagesDir.exists())
-                                    uiPageImagesDir.delete();
-                                
-                                if(uiPageScriptsDir.exists())
-                                    uiPageScriptsDir.delete();
-                                
-                                if(uiPageStylesDir.exists())
-                                    uiPageStylesDir.delete();
-                                
-                                if(uiPageDir.exists())
-                                    uiPageDir.delete();
-                            }
+                    }
+                    else{
+                        if(this.modelInfo.generateUi() == null || !this.modelInfo.generateUi()){
+                            if(uiPageFile.exists())
+                                uiPageFile.delete();
+                            
+                            if(uiPageScriptFile.exists())
+                                uiPageScriptFile.delete();
+                            
+                            if(uiPageStyleFile.exists())
+                                uiPageStyleFile.delete();
+                            
+                            if(uiPageImagesDir.exists())
+                                uiPageImagesDir.delete();
+                            
+                            if(uiPageScriptsDir.exists())
+                                uiPageScriptsDir.delete();
+                            
+                            if(uiPageStylesDir.exists())
+                                uiPageStylesDir.delete();
+                            
+                            if(uiPageDir.exists())
+                                uiPageDir.delete();
                         }
                     }
                 }
-                
-                updateSecurityResources();
-                updateSystemResources();
             }
         }
         catch(IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e){
@@ -1885,153 +1915,5 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
         catch(IOException | DocumentException e){
             throw new InternalErrorException(e);
         }
-    }
-    
-    /**
-     * Updates the security resources.
-     *
-     * @throws InternalErrorException Occurs when was not possible to update the
-     * security resources.
-     */
-    private void updateSecurityResources() throws InternalErrorException{
-        if(this.modelInfo == null)
-            return;
-        
-        Class<? extends BaseModel> modelClass = this.modelInfo.getClazz();
-        
-        if(modelClass != null && (modelClass.getSuperclass().equals(LoginSessionModel.class) || modelClass.getSuperclass().equals(MainConsoleModel.class))){
-            try{
-                StringBuilder securityResourcesFilename = new StringBuilder();
-                
-                securityResourcesFilename.append(this.build.getResourcesDirname());
-                securityResourcesFilename.append(FileUtil.getDirectorySeparator());
-                securityResourcesFilename.append(SecurityConstants.DEFAULT_RESOURCES_ID);
-                
-                XmlReader reader = new XmlReader(new File(securityResourcesFilename.toString()));
-                XmlNode securityResourceContent = reader.getRoot();
-                XmlNode loginSessionNode = securityResourceContent.getNode(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
-                
-                if(loginSessionNode == null){
-                    loginSessionNode = new XmlNode(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
-                    
-                    securityResourceContent.addChild(loginSessionNode);
-                }
-                
-                if(modelClass.getSuperclass().equals(LoginSessionModel.class)){
-                    XmlNode classNode = loginSessionNode.getNode(Constants.CLASS_ATTRIBUTE_ID);
-                    
-                    if(classNode == null){
-                        classNode = new XmlNode(Constants.CLASS_ATTRIBUTE_ID);
-                        
-                        loginSessionNode.addChild(classNode);
-                    }
-                    
-                    classNode.setValue(modelClass.getName());
-                }
-                
-                XmlNode timeoutNode = loginSessionNode.getNode(Constants.TIMEOUT_ATTRIBUTE_ID);
-                
-                if(timeoutNode == null){
-                    timeoutNode = new XmlNode(Constants.TIMEOUT_ATTRIBUTE_ID, SecurityConstants.DEFAULT_LOGIN_SESSION_TIMEOUT.toString());
-                    
-                    loginSessionNode.addChild(timeoutNode);
-                }
-                
-                XmlNode cryptographyNode = securityResourceContent.getNode(SecurityConstants.CRYPTOGRAPHY_ATTRIBUTE_ID);
-                
-                if(cryptographyNode == null){
-                    cryptographyNode = new XmlNode(SecurityConstants.CRYPTOGRAPHY_ATTRIBUTE_ID);
-                    cryptographyNode.addAttribute(SecurityConstants.CRYPTOGRAPHY_ALGORITHM_ATTRIBUTE_ID, SecurityConstants.DEFAULT_CRYPTO_ALGORITHM_ID);
-                    cryptographyNode.addAttribute(SecurityConstants.CRYPTOGRAPHY_KEY_SIZE_ATTRIBUTE_ID, SecurityConstants.DEFAULT_CRYPTO_KEY_SIZE.toString());
-                    
-                    securityResourceContent.addChild(cryptographyNode);
-                }
-                
-                XmlWriter writer = new XmlWriter(new File(securityResourcesFilename.toString()));
-                
-                writer.write(securityResourceContent);
-            }
-            catch(IOException | DocumentException e){
-                throw new InternalErrorException(e);
-            }
-        }
-    }
-    
-    /**
-     * Updates the system resources.
-     *
-     * @throws InternalErrorException Occurs when was not possible to update the
-     * system resources.
-     */
-    private void updateSystemResources() throws InternalErrorException{
-        if(this.modelInfo == null)
-            return;
-        
-        try{
-            StringBuilder systemResourcesFilename = new StringBuilder();
-            
-            systemResourcesFilename.append(ProjectConstants.DEFAULT_RESOURCES_DIR);
-            systemResourcesFilename.append(SystemConstants.DEFAULT_RESOURCES_ID);
-            
-            XmlReader reader = new XmlReader(new File(systemResourcesFilename.toString()));
-            XmlNode systemResourceContentNode = reader.getRoot();
-            
-            Class<? extends BaseModel> modelClass = this.modelInfo.getClazz();
-            
-            if(modelClass != null && (modelClass.getSuperclass().equals(MainConsoleModel.class))){
-                XmlNode mainConsoleNode = systemResourceContentNode.getNode(SystemConstants.MAIN_CONSOLE_ATTRIBUTE_ID);
-                
-                if(mainConsoleNode == null){
-                    mainConsoleNode = new XmlNode(SystemConstants.MAIN_CONSOLE_ATTRIBUTE_ID);
-                    
-                    systemResourceContentNode.addChild(mainConsoleNode);
-                }
-                
-                XmlNode classNode = mainConsoleNode.getNode(Constants.CLASS_ATTRIBUTE_ID);
-                
-                if(classNode == null){
-                    classNode = new XmlNode(Constants.CLASS_ATTRIBUTE_ID);
-                    
-                    mainConsoleNode.addChild(classNode);
-                }
-                
-                if(this.modelInfo.generateUi() != null && this.modelInfo.generateUi())
-                    classNode.setValue(modelClass.getName());
-            }
-            
-            XmlWriter writer = new XmlWriter(new File(systemResourcesFilename.toString()));
-            
-            writer.write(systemResourceContentNode);
-        }
-        catch(IOException | DocumentException e){
-            throw new InternalErrorException(e);
-        }
-    }
-    
-    /**
-     * Adds a class name to the generate code checking file.
-     *
-     * @param className String that contains the class name.
-     * @throws IOException Occurs when was not possible to execute the
-     * operation.
-     */
-    private void addCheckGeneratedCode(String className) throws IOException{
-        if(className == null || className.length() == 0)
-            return;
-        
-        ProjectBuild build = getAnnotationProcessorFactory().getBuild();
-        StringBuilder checkGeneratedCodeFilename = new StringBuilder();
-        
-        checkGeneratedCodeFilename.append(FileUtil.getTempDirectoryPath());
-        checkGeneratedCodeFilename.append(build.getName());
-        checkGeneratedCodeFilename.append("-");
-        checkGeneratedCodeFilename.append(build.getVersion());
-        
-        StringBuilder contentBuffer = new StringBuilder();
-        
-        contentBuffer.append(className);
-        contentBuffer.append(FileUtil.getDirectorySeparator());
-        
-        FileUtil.toTextFile(checkGeneratedCodeFilename.toString(), contentBuffer.toString(), true);
     }
 }

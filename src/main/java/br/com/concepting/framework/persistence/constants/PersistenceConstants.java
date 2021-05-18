@@ -32,8 +32,6 @@ public abstract class PersistenceConstants{
     public static final String CACHEABLE_QUERY_ATTRIBUTE_ID = "org.hibernate.cacheable";
     public static final String CLOSE_QUOTE_ATTRIBUTE_ID = "closeQuote";
     public static final String FACTORY_CLASS_NAME_ATTRIBUTE_ID = "driverClassName";
-    public static final String MAPPINGS_ATTRIBUTE_ID = "mappings";
-    public static final String MAPPING_ATTRIBUTE_ID = "mapping";
     public static final String OPEN_QUOTE_ATTRIBUTE_ID = "openQuote";
     public static final String RESOURCES_ATTRIBUTE_ID = "persistenceResources";
     public static final String QUERY_MAXIMUM_RESULTS_ATTRIBUTE_ID = "hibernate.query_maximum_results";

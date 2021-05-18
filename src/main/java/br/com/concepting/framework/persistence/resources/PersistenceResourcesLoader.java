@@ -184,18 +184,6 @@ public class PersistenceResourcesLoader extends XmlResourcesLoader<PersistenceRe
             }
         }
         
-        XmlNode parentNode = resourcesNode.getParent();
-        
-        resourcesNode = parentNode.getNode(PersistenceConstants.MAPPINGS_ATTRIBUTE_ID);
-        
-        if(resourcesNode != null){
-            List<XmlNode> mappingsNodes = resourcesNode.getChildren();
-            
-            if(mappingsNodes != null && mappingsNodes.size() > 0)
-                for(XmlNode mappingNode: mappingsNodes)
-                    resources.addMapping(mappingNode.getValue());
-        }
-        
         return resources;
     }
 }
