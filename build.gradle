@@ -206,13 +206,6 @@ jar{
     duplicatesStrategy = "EXCLUDE"
 }
 
-task allJar(type: Jar) {
-	archiveClassifier.set("all")
-	duplicatesStrategy = "EXCLUDE"
-	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-	with jar
-}
-
 task javadocJar(type: Jar){
 	archiveClassifier.set("javadoc")
 	duplicatesStrategy = "EXCLUDE"
@@ -228,7 +221,6 @@ artifacts{
 	archives resourcesJar
 	archives coreJar
 	archives javadocJar
-	archives allJar
 }
 
 publishing{
@@ -243,7 +235,6 @@ publishing{
 			artifact resourcesJar
 			artifact coreJar
  			artifact javadocJar
-			artifact allJar
         }
     }
 }
