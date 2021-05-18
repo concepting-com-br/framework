@@ -555,7 +555,7 @@
 				@Property(propertyId="version", mappedPropertyId="version"),
 				@Property(propertyId="active", mappedPropertyId="active"),
 				@Property(propertyId="forms", relationCollectionItemsClass=FormModel.class, mappedRelationPropertiesIds="systemModuleId", foreignKeyId="fk_systemModule_form"),
-				@Property(propertyId="exclusionUrls", relationCollectionItemsClass=UrlModel.class, mappedPropertiesIds="systemModuleId", mappedRelationPropertiesIds="urlId", mappedRelationRepositoryId="systemModuleExclusionUrls", foreignKeyId="fk_systemModule_url")
+				@Property(propertyId="exclusionUrls", relationCollectionItemsClass=UrlModel.class, mappedPropertiesIds="systemModuleId", mappedRelationPropertiesIds="urlId", mappedRelationRepositoryId="systemModuleExclusionUrls", keyId="fk_url_systemModule", foreignKeyId="fk_systemModule_url")
 			}
 		)
 		@SuppressWarnings({"javadoc", "unchecked"})
