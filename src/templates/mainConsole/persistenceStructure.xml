@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE artifacts>
+
+<artifacts>
+	<artifact name="persistenceStructure">
+		<set var="content" value="br.com.concepting.framework.persistence.util.PersistenceUtil.generateStructure(@{build.resourcesDirname})"/>
+		@{content}
+	</artifact>
+</artifacts>

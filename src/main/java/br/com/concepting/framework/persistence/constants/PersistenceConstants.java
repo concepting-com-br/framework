@@ -37,15 +37,16 @@ public abstract class PersistenceConstants{
     public static final String QUERY_MAXIMUM_RESULTS_ATTRIBUTE_ID = "hibernate.query_maximum_results";
     public static final String INSTANCE_ATTRIBUTE_ID = "instanceId";
     public static final String REPOSITORY_ATTRIBUTE_ID = "repositoryId";
+    public static final List<String> DEFAULT_COLLECTION_TYPES_IDS = Arrays.asList("org.hibernate.collection.internal.AbstractPersistentCollection", "org.hibernate.collection.spi.PersistentCollection", "org.hibernate.collection.internal.PersistentBag");
     public static final String DEFAULT_FILE_EXTENSION = ".sql";
     public static final String DEFAULT_ID = "persistence";
     public static final String DEFAULT_IMPLEMENTATION_ID = "persistenceImpl";
     public static final Integer DEFAULT_MAXIMUM_RESULTS = 512;
     public static final String DEFAULT_MAPPINGS_DIR = ResourcesConstants.DEFAULT_RESOURCES_DIR.concat("mappings/");
     public static final String DEFAULT_MAPPING_FILE_EXTENSION = ".hbm.xml";
+    public static final String DEFAULT_PERSISTENCE_PACKAGE_ID = "org.hibernate";
     public static final RepositoryType DEFAULT_REPOSITORY_TYPE = RepositoryType.MYSQL;
     public static final String DEFAULT_RESOURCES_ID = ResourcesConstants.DEFAULT_RESOURCES_DIR.concat("persistenceResources.xml");
-    public static final List<String> DEFAULT_COLLECTION_TYPES_IDS = Arrays.asList("org.hibernate.collection.internal.AbstractPersistentCollection", "org.hibernate.collection.spi.PersistentCollection", "org.hibernate.collection.internal.PersistentBag");
     public static final String DEFAULT_ENUM_TYPE_ID = "org.hibernate.type.EnumType";
     public static final String DEFAULT_BINARY_TYPE_ID = "binary";
     public static final String DEFAULT_BOOLEAN_TYPE_ID = "boolean";

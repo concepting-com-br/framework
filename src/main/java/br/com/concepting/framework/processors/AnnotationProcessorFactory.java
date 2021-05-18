@@ -6,6 +6,7 @@ import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.MainConsoleModel;
 import br.com.concepting.framework.model.processors.ModelAnnotationProcessor;
 import br.com.concepting.framework.model.util.ModelUtil;
+import br.com.concepting.framework.persistence.constants.PersistenceConstants;
 import br.com.concepting.framework.processors.helpers.ProjectBuild;
 import br.com.concepting.framework.processors.interfaces.IAnnotationProcessor;
 import br.com.concepting.framework.security.model.LoginSessionModel;
@@ -13,6 +14,8 @@ import br.com.concepting.framework.security.util.SecurityUtil;
 import br.com.concepting.framework.util.ExceptionUtil;
 import br.com.concepting.framework.util.FileUtil;
 import br.com.concepting.framework.util.PropertyUtil;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -47,6 +50,12 @@ import java.util.Set;
 @SupportedAnnotationTypes({"br.com.concepting.framework.model.annotations.Model"})
 @SupportedOptions({"buildDir", "buildName", "buildVersion"})
 public class AnnotationProcessorFactory extends AbstractProcessor{
+    static{
+        Logger.getLogger(PersistenceConstants.DEFAULT_PERSISTENCE_PACKAGE_ID).setLevel(Level.OFF);
+        
+        Thread.currentThread().setContextClassLoader(AnnotationProcessorFactory.class.getClassLoader());
+    }
+
     private ProcessingEnvironment environment = null;
     private ProjectBuild build = null;
     
