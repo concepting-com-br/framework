@@ -107,6 +107,8 @@ public abstract class BaseFilter implements Filter{
             this.systemController = new SystemController((HttpServletRequest) request, (HttpServletResponse) response);
             this.systemController.setCurrentException(null);
             
+            this.securityController = this.systemController.getSecurityController();
+            
             try{
                 initialize();
                 process();

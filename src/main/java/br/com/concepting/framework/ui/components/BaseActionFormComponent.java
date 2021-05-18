@@ -153,16 +153,12 @@ public abstract class BaseActionFormComponent extends BaseComponent{
      */
     protected PropertiesResources getMainConsoleResources() throws InternalErrorException{
         if(this.mainConsoleResources == null){
-            Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(System.class);
+            Class<? extends MainConsoleModel> mainConsoleClass = ModelUtil.getMainConsoleClass();
             
-            if(classes != null && !classes.isEmpty()){
-                Class<? extends MainConsoleModel> mainConsoleClass = classes.parallelStream().filter(MainConsoleModel.class::isInstance).map(c -> (Class<? extends MainConsoleModel>)c).findFirst().get();
+            if(mainConsoleClass != null){
+                String resourcesId = ModelUtil.getResourcesIdByModel(mainConsoleClass);
                 
-                if(mainConsoleClass != null){
-                    String resourcesId = ModelUtil.getResourcesIdByModel(mainConsoleClass);
-                    
-                    return getResources(resourcesId);
-                }
+                return getResources(resourcesId);
             }
         }
         
