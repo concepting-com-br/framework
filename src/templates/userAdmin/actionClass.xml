@@ -38,9 +38,7 @@
 		<set var="capitalizedGroupDataset" value="br.com.concepting.framework.util.StringUtil.capitalize(@{groupDataset})"/>
 		<set var="groupServiceClassName" value="br.com.concepting.framework.service.util.ServiceUtil.getServiceInterfaceClassNameByModel(@{groupModelClass})"/>
 		<set var="groupServiceName" value="br.com.concepting.framework.service.util.ServiceUtil.getServiceInterfaceNameByModel(@{groupModelClass})"/>
-		
-		import java.util.Collection;
-	
+
 		import br.com.concepting.framework.controller.action.BaseAction;
 		import br.com.concepting.framework.model.exceptions.ItemNotSelectedException;
 		import br.com.concepting.framework.util.helpers.DateTime;
@@ -59,6 +57,8 @@
         	import @{searchServiceClassName};
         </if>
 		import @{groupServiceClassName};
+
+		import java.util.Collection;
 
 		/**
 		 * Class that defines the actions of the user administration UI.
@@ -179,7 +179,7 @@
 		        
 		        service.updateExpirePasswordDateTime(user);
 		        
-		        form.setAction(form.getLastAction());
+		        super.back();
 		    }
 		    
 		    /**

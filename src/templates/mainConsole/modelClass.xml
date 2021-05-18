@@ -12,10 +12,12 @@
 	    
 		import br.com.concepting.framework.model.annotations.Model;
 		import br.com.concepting.framework.model.annotations.Property;
-		
+
 		import @{groupModelClassName};
 		import @{loginParameterModelClassName};
-		
+
+		import java.util.Collection;
+
 		/**
 		 * Class that defines the user data model.
 		 *
@@ -23,7 +25,6 @@
 		 * @version @{build.version}
 		 * @since @{now}
 		 */
-		@SuppressWarnings("javadoc")
 		@Model(mappedRepositoryId="user",
 			mappedProperties={
 				@Property(propertyId="id", mappedPropertyId="id"),
@@ -42,8 +43,14 @@
 		        @Property(propertyId="groups", relationCollectionItemsClass=GroupModel.class, mappedPropertiesIds="userId", mappedRelationPropertiesIds="groupId", mappedRelationRepositoryId="userGroup", keyId="fk_group_user", foreignKeyId="fk_user_group")
 			}
 		)
+		@SuppressWarnings({"javadoc", "unchecked"})
 		public class @{name} extends br.com.concepting.framework.security.model.UserModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
+
+			@Override
+			public Collection&lt;GroupModel&gt; getGroups(){
+				return (Collection&lt;GroupModel&gt;)super.getGroups();
+			}
 		}
 	</artifact>
 	<artifact packagePrefix="br.com.concepting.framework.model.util.ModelUtil.getPackagePrefix(#{clazz})"
@@ -84,6 +91,7 @@
 		        @Property(propertyId="language", mappedPropertyId="language")
 			}
 		)
+		@SuppressWarnings("javadoc")
 		public class @{name} extends br.com.concepting.framework.security.model.LoginParameterModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
 		}
@@ -99,11 +107,13 @@
 		
 		import br.com.concepting.framework.model.annotations.Model;
 		import br.com.concepting.framework.model.annotations.Property;
-		
+
 		import @{objectModelClassName};
 		import @{userModelClassName};
 		import @{accessModelClassName};
-		
+
+		import java.util.Collection;
+
 		/**
 		 * Class that defines the group data model.
 		 *
@@ -122,8 +132,24 @@
 				@Property(propertyId="accesses", relationCollectionItemsClass=AccessModel.class, mappedPropertiesIds="groupId", mappedRelationPropertiesIds="accessId", mappedRelationRepositoryId="groupAccess", keyId="fk_access_group", foreignKeyId="fk_group_access")
 			}
 		)
+		@SuppressWarnings({"javadoc", "unchecked"})
 		public class @{name} extends br.com.concepting.framework.security.model.GroupModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
+
+			@Override
+			public Collection&lt;UserModel&gt; getUsers(){
+				return (Collection&lt;UserModel&gt;)super.getUsers();
+			}
+
+			@Override
+			public Collection&lt;ObjectModel&gt; getObjects(){
+				return (Collection&lt;ObjectModel&gt;)super.getObjects();
+			}
+
+			@Override
+			public Collection&lt;AccessModel&gt; getAccesses(){
+				return (Collection&lt;AccessModel&gt;)super.getAccesses();
+			}
 		}
 	</artifact>
 	<artifact packagePrefix="br.com.concepting.framework.model.util.ModelUtil.getPackagePrefix('#{clazz.name}')"
@@ -152,6 +178,7 @@
 				@Property(propertyId="blocked", mappedPropertyId="blocked")
 			}
 		)
+		@SuppressWarnings("javadoc")
 		public class @{name} extends br.com.concepting.framework.security.model.AccessModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
 		}
@@ -164,9 +191,10 @@
 	    <set var="systemSessionModelClassName" value="@{packagePrefix}.concat('.model.SystemSessionModel')"/>
 	    <set var="systemModuleModelClassName" value="@{packagePrefix}.concat('.model.SystemModuleModel')"/>
 	    <set var="userModelClassName" value="@{packageName}.concat('.UserModel')"/>
-	    
+
 		import br.com.concepting.framework.model.annotations.Model;
 		import br.com.concepting.framework.model.annotations.Property;
+		import br.com.concepting.framework.security.annotations.Security;
 		
 		import @{systemSessionModelClassName};
 		import @{systemModuleModelClassName};
@@ -188,6 +216,8 @@
 				@Property(propertyId="active", mappedPropertyId="active")
 			}
 		)
+		@Security
+		@SuppressWarnings("javadoc")
 		public class @{name} extends br.com.concepting.framework.security.model.LoginSessionModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
 		}
@@ -200,15 +230,15 @@
 	    <set var="userModelClassName" value="@{packageName}.concat('.UserModel')"/>
 	    <set var="groupModelClassName" value="@{packageName}.concat('.GroupModel')"/>
 	    
-	    import java.util.Collection;
-	    
 		import br.com.concepting.framework.model.BaseModel;
 		import br.com.concepting.framework.model.annotations.Model;
 		import br.com.concepting.framework.model.annotations.Property;
-		
+
 		import @{userModelClassName};
 		import @{groupModelClassName};
-		
+
+		import java.util.Collection;
+
 		/**
 		 * Class that defines the user administration UI data model.
 		 *
@@ -217,6 +247,7 @@
 		 * @since @{now}
 		 */
 		@Model(ui="Users", templateId="userAdmin")
+		@SuppressWarnings("javadoc")
 		public class @{name} extends BaseModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
 			
@@ -315,9 +346,7 @@
 		<set var="userModelClassName" value="@{packageName}.concat('.UserModel')"/>
 	    <set var="groupModelClassName" value="@{packageName}.concat('.GroupModel')"/>
 	    <set var="accessModelClassName" value="@{packageName}.concat('.AccessModel')"/>
-	    
-	    import java.util.Collection;
-	    
+
 		import br.com.concepting.framework.model.BaseModel;
 		import br.com.concepting.framework.model.annotations.Model;
 		import br.com.concepting.framework.model.annotations.Property;
@@ -327,7 +356,9 @@
 		import @{userModelClassName};
 		import @{groupModelClassName};
 		import @{accessModelClassName};
-		
+
+		import java.util.Collection;
+
 		/**
 		 * Class that defines the user administration UI data model.
 		 *
@@ -336,6 +367,7 @@
 		 * @since @{now}
 		 */
 		@Model(ui="Groups", templateId="groupAdmin")
+		@SuppressWarnings("javadoc")
 		public class @{name} extends BaseModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
 			
@@ -500,7 +532,9 @@
 		
 		import @{formModelClassName};
 		import @{urlModelClassName};
-		
+
+		import java.util.Collection;
+
 		/**
 		 * Class that defines the system module data model.
 		 *
@@ -524,8 +558,19 @@
 				@Property(propertyId="exclusionUrls", relationCollectionItemsClass=UrlModel.class, mappedPropertiesIds="systemModuleId", mappedRelationPropertiesIds="urlId", mappedRelationRepositoryId="systemModuleExclusionUrls", foreignKeyId="fk_systemModule_url")
 			}
 		)
+		@SuppressWarnings({"javadoc", "unchecked"})
 		public class @{name} extends br.com.concepting.framework.model.SystemModuleModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
+
+			@Override
+		    public Collection&lt;FormModel&gt; getForms(){
+				return (Collection&lt;FormModel&gt;)super.getForms();
+			}
+
+			@Override
+			public Collection&lt;UrlModel&gt; getExclusionUrls(){
+				return (Collection&lt;UrlModel&gt;)super.getExclusionUrls();
+			}
 		}
 	</artifact>
 	<artifact packagePrefix="br.com.concepting.framework.model.util.ModelUtil.getPackagePrefix('#{clazz.name}')"
@@ -541,7 +586,9 @@
 		
 		import @{objectModelClassName};
 		import @{systemModuleModelClassName};
-		
+
+		import java.util.Collection;
+
 		/**
 		 * Class thar defines the form data model.
 		 *
@@ -559,8 +606,14 @@
 				@Property(propertyId="objects", relationCollectionItemsClass=ObjectModel.class, mappedRelationPropertiesIds="formId", foreignKeyId="fk_form_object")
 			}
 		)
+		@SuppressWarnings({"javadoc", "unchecked"})
 		public class @{name} extends br.com.concepting.framework.model.FormModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
+
+			@Override
+			public Collection&lt;ObjectModel&gt; getObjects(){
+				return (Collection&lt;ObjectModel&gt;)super.getObjects();
+			}
 		}
 	</artifact>
 	<artifact packagePrefix="br.com.concepting.framework.model.util.ModelUtil.getPackagePrefix('#{clazz.name}')"
@@ -579,7 +632,9 @@
 		
 		import @{formModelClassName};
 		import @{groupModelClassName};
-		
+
+		import java.util.Collection;
+
 		/**
 		 * Class that defines the object data model.
 		 *
@@ -603,8 +658,14 @@
 				@Property(propertyId="groups", relationCollectionItemsClass=GroupModel.class, mappedPropertiesIds="objectId", mappedRelationPropertiesIds="groupId", mappedRelationRepositoryId="groupObject", keyId="fk_group_object", foreignKeyId="fk_object_group")
 			}
 		)
+		@SuppressWarnings({"javadoc", "unchecked"})
 		public class @{name} extends br.com.concepting.framework.model.ObjectModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
+
+			@Override
+			public Collection&lt;GroupModel&gt; getGroups(){
+				return (Collection&lt;GroupModel&gt;)super.getGroups();
+			}
 		}
 	</artifact>
 	<artifact packagePrefix="br.com.concepting.framework.model.util.ModelUtil.getPackagePrefix('#{clazz.name}')"
@@ -629,6 +690,7 @@
 				@Property(propertyId="path", mappedPropertyId="path")
 			}
 		)
+		@SuppressWarnings("javadoc")
 		public class @{name} extends br.com.concepting.framework.model.UrlModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
 		}
@@ -657,6 +719,7 @@
 				@Property(propertyId="hostName", mappedPropertyId="hostName")
 			}
 		)
+		@SuppressWarnings("javadoc")
 		public class @{name} extends br.com.concepting.framework.model.SystemSessionModel{
 			private static final long serialVersionUID = @{serialVersionUID}L;
 		}

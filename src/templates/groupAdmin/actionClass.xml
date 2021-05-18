@@ -54,10 +54,8 @@
 		<set var="urlServiceName" value="br.com.concepting.framework.service.util.ServiceUtil.getServiceInterfaceNameByModel(@{urlModelClass})"/>
 		<set var="urlDataset" value="@{urlPropertyInfo.dataset}"/>
 		<set var="capitalizedUrlDataset" value="br.com.concepting.framework.util.StringUtil.capitalize(@{urlDataset})"/>
-		
-		import java.util.Collection;
-		import java.util.List;
 
+		import br.com.concepting.framework.constants.Constants;
 		import br.com.concepting.framework.controller.action.BaseAction;
 		import br.com.concepting.framework.model.exceptions.ItemNotSelectedException;
 		import br.com.concepting.framework.model.types.ConditionType;
@@ -81,6 +79,8 @@
         import @{objectServiceClassName};
         import @{urlServiceClassName};
         import @{userServiceClassName};
+
+		import java.util.Collection;
 
 		/**
 		 * Class that defines the actions of the group administration UI.
@@ -255,10 +255,10 @@
 		        @{actionFormName} form = getActionForm();
 		        #{clazz.simpleName} model = form.getModel();
 		        @{inputModelName} input = model.getInput();
-		        List&lt;@{accessModelName}&gt; accesses = input.getAccesses();
+		        Collection&lt;@{accessModelName}&gt; accesses = input.getAccesses();
 		        
 		        if(accesses == null){
-		        	accesses = PropertyUtil.instantiate(List.class);
+		        	accesses = PropertyUtil.instantiate(Constants.DEFAULT_LIST_CLASS);
 		        	
 		        	input.setAccesses(accesses);
 		        }
@@ -276,7 +276,7 @@
 		        #{clazz.simpleName} model = form.getModel();
 		        @{inputModelName} input = model.getInput();
 		        @{accessModelName} access = model.getAccess();
-		        List&lt;@{accessModelName}&gt; accesses = input.getAccesses();
+		        Collection&lt;@{accessModelName}&gt; accesses = input.getAccesses();
 		        
 		        if(access == null || accesses == null || accesses.size() == 0)
 		        	throw new ItemNotSelectedException();

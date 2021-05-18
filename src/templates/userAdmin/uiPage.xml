@@ -16,7 +16,8 @@
 		<set var="inputDataset" value="@{inputPropertyInfo.dataset}"/>
 		<set var="groupPropertyInfo" value="@{inputModelInfo}.getPropertyInfo('groups')"/>
 		<set var="groupDataset" value="@{groupPropertyInfo.dataset}"/>
-		<set var="mainConsoleResourcesId" value="br.com.concepting.framework.model.util.ModelUtil.getResourcesIdByModel(@{systemResources.mainConsoleClass})"/>
+		<set var="mainConsoleClass" value="br.com.concepting.framework.model.util.ModelUtil.getMainConsoleClass()"/>
+		<set var="mainConsoleResourcesId" value="br.com.concepting.framework.model.util.ModelUtil.getResourcesIdByModel(@{mainConsoleClass})"/>
 		
 		<concepting:page title="${loginSession.systemModule.title} ${loginSession.systemModule.version}">
 			<jsp:include page="/WEB-INF/jsp/header.jsp"/>

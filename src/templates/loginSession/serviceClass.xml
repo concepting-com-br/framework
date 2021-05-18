@@ -18,8 +18,9 @@
 		<set var="interfaceName" value="br.com.concepting.framework.service.util.ServiceUtil.getServiceInterfaceNameByModel(#{clazz})"/>
 		
 		import br.com.concepting.framework.audit.annotations.Auditable;
+		import br.com.concepting.framework.exceptions.InternalErrorException;
 		import br.com.concepting.framework.service.annotations.Service;
-	
+
 		import #{clazz.name};
 		import @{userModelClassName};
 		import @{loginParameterModelClassName};
@@ -36,10 +37,12 @@
 		@Service
 		@Auditable
 		public class @{name} extends br.com.concepting.framework.security.service.LoginSessionServiceImpl&lt;#{clazz.simpleName}, @{userModelName}, @{loginParameterModelName}&gt; implements @{interfaceName}{
-			/**
-			 * @see br.com.concepting.framework.security.service.interfaces.LoginSessionService#sendForgottenPasswordMessage(br.com.concepting.framework.security.model.UserModel)
-			 */
-			protected void sendForgottenPasswordMessage(U user) throws InternalErrorException{
+			@Override
+			protected void sendForgottenPasswordMessage(@{userModelName} user) throws InternalErrorException{
+			}
+
+			@Override
+			protected void sendMfaTokenMessage(@{userModelName} userModel) throws InternalErrorException{
 			}
 		}
 	</artifact>

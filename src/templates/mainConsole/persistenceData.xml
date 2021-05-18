@@ -3,7 +3,8 @@
 
 <artifacts>
 	<artifact name="persistenceData1">
-		<set var="loginSessionModelInfo" value="br.com.concepting.framework.model.util.ModelUtil.getInfo(@{securityResources.loginSessionClass})"/>
+		<set var="loginSessionClass" value="br.com.concepting.framework.security.util.SecurityUtil.getLoginSessionClass()"/>
+		<set var="loginSessionModelInfo" value="br.com.concepting.framework.model.util.ModelUtil.getInfo(@{loginSessionClass})"/>
 		<set var="systemModulePropertyInfo" value="@{loginSessionModelInfo}.getPropertyInfo('systemModule')"/>
 		<set var="systemModuleModelInfo" value="br.com.concepting.framework.model.util.ModelUtil.getInfo(@{systemModulePropertyInfo.clazz})"/>
 		<set var="formPropertyInfo" value="@{systemModuleModelInfo}.getPropertyInfo('forms')"/>
