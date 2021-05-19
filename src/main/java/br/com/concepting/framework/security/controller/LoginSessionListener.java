@@ -111,8 +111,6 @@ public class LoginSessionListener implements HttpSessionListener{
             onCreate();
         }
         catch(InternalErrorException e){
-            if(this.systemController != null)
-                this.systemController.setCurrentException(e);
         }
     }
     

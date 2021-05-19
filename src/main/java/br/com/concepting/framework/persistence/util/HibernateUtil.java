@@ -258,7 +258,7 @@ public class HibernateUtil{
             Set<Class<?>> classes = ReflectionUtil.getTypesAnnotatedWith(Model.class);
             
             if(classes != null && !classes.isEmpty()){
-                Collection<Class<? extends BaseModel>> mappings = classes.parallelStream().filter(BaseModel.class::isInstance).map(c -> (Class<? extends BaseModel>)c).collect(Collectors.toList());
+                Collection<Class<? extends BaseModel>> mappings = classes.parallelStream().map(c -> (Class<? extends BaseModel>)c).collect(Collectors.toList());
             
                 if(mappings != null && !mappings.isEmpty()){
                     Model modelAnnotation = null;

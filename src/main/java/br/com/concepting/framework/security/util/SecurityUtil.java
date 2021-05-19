@@ -90,7 +90,7 @@ public class SecurityUtil{
     
         if(classes != null && !classes.isEmpty()){
             try{
-                Security security = classes.parallelStream().filter(LoginSessionModel.class::isInstance).map(c -> c.getAnnotation(Security.class)).findFirst().get();
+                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).findFirst().get();
             
                 return security.cryptoAlgorithm();
             }
@@ -106,7 +106,7 @@ public class SecurityUtil{
         
         if(classes != null && !classes.isEmpty()){
             try{
-                Security security = classes.parallelStream().filter(LoginSessionModel.class::isInstance).map(c -> c.getAnnotation(Security.class)).findFirst().get();
+                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).findFirst().get();
                 
                 return security.cryptoKeySIze();
             }
