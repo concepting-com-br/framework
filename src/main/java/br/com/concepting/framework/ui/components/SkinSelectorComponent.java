@@ -82,10 +82,6 @@ public class SkinSelectorComponent extends ListPropertyComponent{
                     onChange.append("=");
                     onChange.append(ActionType.CHANGE_CURRENT_SKIN.getMethod());
                     onChange.append("&");
-                    onChange.append(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
-                    onChange.append("=");
-                    onChange.append(ActionFormConstants.DEFAULT_ROOT_FORWARD_ID);
-                    onChange.append("&");
                     onChange.append(SystemConstants.CURRENT_SKIN_ATTRIBUTE_ID);
                     onChange.append("=' + this.value);");
         

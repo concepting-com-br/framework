@@ -1,6 +1,7 @@
 package br.com.concepting.framework.ui.constants;
 
 import br.com.concepting.framework.constants.Constants;
+import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.resources.constants.ResourcesConstants;
 
 /**
@@ -249,10 +250,12 @@ public abstract class UIConstants{
     public static final Integer DEFAULT_OPTIONS_PER_ROW = 1;
     public static final String DEFAULT_OPTIONS_STYLE_CLASS = "options";
     public static final String DEFAULT_PAGE_FILE_EXTENSION = ".jsp";
+    public static final String DEFAULT_PAGE_FILE_ID = "index.jsp";
     public static final String DEFAULT_PAGE_SHADE_ID = "pageShade";
     public static final String DEFAULT_PAGE_SHADE_STYLE_CLASS = DEFAULT_PAGE_SHADE_ID;
     public static final String DEFAULT_PAGE_STYLE_RESOURCES_ID = "/".concat(DEFAULT_STYLE_RESOURCES_ID);
     public static final String DEFAULT_PAGE_SCRIPT_RESOURCES_ID = "/".concat(DEFAULT_SCRIPT_RESOURCES_ID);
+    public static final String DEFAULT_PAGES_DIR = SystemConstants.DEFAULT_DESCRIPTORS_DIR.concat("/jsp");
     public static final String DEFAULT_PAGER_DISPLAY_STYLE_CLASS = "pagerDisplay";
     public static final String DEFAULT_PAGER_FIRST_PAGE_BUTTON_ID = "firstPageButton";
     public static final String DEFAULT_PAGER_FIRST_PAGE_BUTTON_STYLE_CLASS = DEFAULT_PAGER_FIRST_PAGE_BUTTON_ID;

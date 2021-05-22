@@ -207,7 +207,8 @@
 		 * @version @{build.version}
 		 * @since @{now}
 		 */
-		@Model(mappedProperties={
+		@Model(mappedRepositoryId="loginSession",
+			mappedProperties={
 				@Property(propertyId="id", mappedPropertyId="id"),
 				@Property(propertyId="startDateTime", mappedPropertyId="startDateTime"),
 				@Property(propertyId="systemSession", relationClass=SystemSessionModel.class, mappedRelationPropertiesIds="systemSessionId", foreignKeyId="fk_loginSession_systemSession"),

@@ -6,18 +6,22 @@
 	          name="br.com.concepting.framework.controller.form.util.ActionFormUtil.getActionFormNameByModel(#{clazz})">
 		package @{packageName};
 		<set var="serialVersionUID" value="br.com.concepting.framework.model.util.ModelUtil.generateSerialVersionUID()"/>
-		
+
+		import br.com.concepting.framework.controller.form.annotations.ActionForm;
 		import br.com.concepting.framework.controller.form.BaseActionForm;
 
 		import #{clazz.name};
+		<set var="actionFormName" value="br.com.concepting.framework.controller.form.util.ActionFormUtil.getActionFormIdByModel(#{clazz})"/>
+		<set var="actionFormUrl" value="br.com.concepting.framework.model.util.ModelUtil.getUrlByModel(#{clazz})"/>
 
 		/**
-		 * Class that defines the form of the user administration UI.
+		 * Class that defines the form of the #{clazz} UI.
 		 *
 		 * @author @{user.name}
 		 * @version @{build.version}
 		 * @since @{now}
 		 */
+		@ActionForm(name="@{actionFormName}", action="@{actionFormUrl}")
 		@SuppressWarnings("javadoc")
 		public class @{name} extends BaseActionForm&lt;#{clazz.simpleName}&gt;{
 			private static final long serialVersionUID = @{serialVersionUID}L;

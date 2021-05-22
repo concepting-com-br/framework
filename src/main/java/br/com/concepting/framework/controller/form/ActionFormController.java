@@ -107,8 +107,8 @@ public class ActionFormController{
         else{
             String action = StringUtil.replaceAll(this.systemController.getRequestURI(), this.systemController.getContextPath(), "");
     
-            action = StringUtil.replaceAll(action, ProjectConstants.DEFAULT_UI_PAGES_DIR, "");
             action = StringUtil.replaceAll(action, ActionFormConstants.DEFAULT_ACTION_SERVLET_FILE_EXTENSION, "");
+            action = StringUtil.replaceAll(action, UIConstants.DEFAULT_PAGES_DIR, "");
     
             int pos = action.indexOf(UIConstants.DEFAULT_PAGE_FILE_EXTENSION);
     
@@ -126,7 +126,7 @@ public class ActionFormController{
                 for(Class<?> actionFormClass: actionFormClasses){
                     ActionForm actionForm = actionFormClass.getAnnotation(ActionForm.class);
             
-                    if(action.equals(actionForm.action())){
+                    if(action != null && actionForm != null && action.equals(actionForm.action())){
                         this.actionFormName = actionForm.name();
                         
                         actionFormInstance = this.systemController.getAttribute(actionForm.name(), ScopeType.SESSION);
@@ -136,13 +136,13 @@ public class ActionFormController{
                                 actionFormInstance = (BaseActionForm<? extends BaseModel>) ConstructorUtils.invokeConstructor(actionFormClass, null);
     
                                 this.systemController.setAttribute(this.actionFormName, actionFormInstance, ScopeType.SESSION);
-    
-                                break;
                             }
                             catch(InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e){
                                 throw new InternalErrorException(e);
                             }
                         }
+                        
+                        break;
                     }
                 }
             }

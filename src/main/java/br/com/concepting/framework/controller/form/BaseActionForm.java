@@ -1,6 +1,8 @@
 package br.com.concepting.framework.controller.form;
 
 import br.com.concepting.framework.constants.Constants;
+import br.com.concepting.framework.constants.ProjectConstants;
+import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.action.BaseAction;
 import br.com.concepting.framework.controller.action.types.ActionType;
@@ -20,9 +22,11 @@ import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.exceptions.PermissionDeniedException;
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
+import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.util.ExceptionUtil;
 import br.com.concepting.framework.util.PropertyUtil;
 import org.apache.commons.beanutils.ConstructorUtils;
+import org.checkerframework.checker.guieffect.qual.UI;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -321,30 +325,41 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
         this.validateModelProperties = validateModelProperties;
     }
     
-    /**
-     * Finds the forward of the action form.
-     *
-     * @return Instance that contains the forward of the action form.
-     * @throws InternalErrorException Occurs when was not possible to execute
-     * the operation.
-     */
-    private Forward findForward() throws InternalErrorException{
+    private String findForwardUrl() throws InternalErrorException{
         if(this.forward == null || this.forward.length() == 0)
             this.forward = ActionFormConstants.DEFAULT_FORWARD_ID;
         
-        ActionForm form = getClass().getAnnotation(ActionForm.class);
-        Forward[] forwards = form.forwards();
-        Forward defaultForward = null;
+        StringBuilder forwardUrl = new StringBuilder();
+        ActionForm actionForm = getClass().getAnnotation(ActionForm.class);
         
-        for(Forward forward : forwards){
-            if(forward.isDefault())
-                defaultForward = forward;
-            
-            if(forward.name().equals(this.forward))
-                return forward;
+        if(actionForm != null){
+            Forward defaultForward = actionForm.defaultForward();
+            Forward[] forwards = actionForm.forwards();
+    
+            for(Forward forward: forwards){
+                if(this.forward.equals(forward.name())){
+                    forwardUrl.append("/");
+                    forwardUrl.append(UIConstants.DEFAULT_PAGES_DIR);
+                    forwardUrl.append(actionForm.action());
+                    forwardUrl.append("/");
+                    forwardUrl.append(forward.url());
+                    
+                    break;
+                }
+            }
+
+            if(forwardUrl.length() == 0){
+                forwardUrl.append("/");
+                forwardUrl.append(UIConstants.DEFAULT_PAGES_DIR);
+                forwardUrl.append(actionForm.action());
+                forwardUrl.append("/");
+                forwardUrl.append(defaultForward.url());
+            }
         }
-        
-        return defaultForward;
+        else
+            forwardUrl.append("/");
+    
+        return forwardUrl.toString();
     }
     
     /**
@@ -368,9 +383,7 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
             
             actionFormPopulator.populateActionForm();
             
-            Forward forward = findForward();
-            
-            url = (forward != null ? forward.url() : "/");
+            url = findForwardUrl();
             
             if(securityController.isLoginSessionAuthenticated()){
                 L loginSession = securityController.getLoginSession();
@@ -400,10 +413,10 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
                 
                 if(actionClass != null){
                     BaseAction<M> actionInstance = ConstructorUtils.invokeConstructor(actionClass, null);
-                    Forward methodForward = actionInstance.processRequest(this, systemController, actionFormController, securityController);
+                    String methodUrl = actionInstance.processRequest(this, systemController, actionFormController, securityController);
                     
-                    if(methodForward != null)
-                        url = (methodForward != null ? methodForward.url() : "/");
+                    if(methodUrl != null && methodUrl.length() > 0)
+                        url = methodUrl;
                 }
             }
     

@@ -30,10 +30,8 @@ public abstract class ActionFormConstants{
     public static final String DATASET_SCOPE_ATTRIBUTE_ID = "datasetScope";
     public static final String DATASET_START_INDEX_ATTRIBUTE_ID = "datasetStartIndex";
     public static final String DATASET_END_INDEX_ATTRIBUTE_ID = "datasetEndIndex";
-    public static final String FORWARDS_ATTRIBUTE_ID = "forwards";
     public static final String FORWARD_ATTRIBUTE_ID = "forward";
     public static final String DEFAULT_ACTION_SERVLET_FILE_EXTENSION = ".ui";
-    public static final String DEFAULT_ROOT_FORWARD_ID = "root";
     public static final String DEFAULT_FORWARD_ID = "index";
     public static final ScopeType DEFAULT_DATASET_SCOPE_TYPE = ScopeType.MODEL;
 }

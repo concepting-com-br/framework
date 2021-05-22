@@ -243,32 +243,32 @@ public class SecurityFilter extends BaseFilter{
             if(systemModuleService != null){
                 try{
                     systemModule = systemModuleService.find(systemModule);
-                    
+    
                     if(systemModule.isActive() == null || !systemModule.isActive())
                         throw new PermissionDeniedException();
                 }
                 catch(ItemNotFoundException e){
                     throw new PermissionDeniedException();
                 }
-            }
-            
-            systemModule = systemModuleService.loadReference(systemModule, SystemConstants.EXCLUSION_URLS_ATTRIBUTE_ID);
-            
-            if(isWebServicesRequest == null || !isWebServicesRequest){
-                systemModule = systemModuleService.loadReference(systemModule, SystemConstants.FORMS_ATTRIBUTE_ID);
-                
-                Class<? extends MainConsoleModel> mainConsoleClass = ModelUtil.getMainConsoleClass();
-                
-                if(mainConsoleClass != null){
-                    F form = systemModule.getForm(ActionFormUtil.getActionFormIdByModel(mainConsoleClass));
     
-                    if(form != null){
-                        Class<F> formClass = (Class<F>) form.getClass();
-                        IService<F> formService = getService(formClass);
+                systemModule = systemModuleService.loadReference(systemModule, SystemConstants.EXCLUSION_URLS_ATTRIBUTE_ID);
+            
+                if(isWebServicesRequest == null || !isWebServicesRequest){
+                    systemModule = systemModuleService.loadReference(systemModule, SystemConstants.FORMS_ATTRIBUTE_ID);
+                    
+                    Class<? extends MainConsoleModel> mainConsoleClass = ModelUtil.getMainConsoleClass();
+                    
+                    if(mainConsoleClass != null){
+                        F form = systemModule.getForm(ActionFormUtil.getActionFormIdByModel(mainConsoleClass));
         
-                        form = formService.loadReference(form, SystemConstants.OBJECTS_ATTRIBUTE_ID);
-        
-                        systemModule.setForm(form);
+                        if(form != null){
+                            Class<F> formClass = (Class<F>) form.getClass();
+                            IService<F> formService = getService(formClass);
+            
+                            form = formService.loadReference(form, SystemConstants.OBJECTS_ATTRIBUTE_ID);
+            
+                            systemModule.setForm(form);
+                        }
                     }
                 }
             }

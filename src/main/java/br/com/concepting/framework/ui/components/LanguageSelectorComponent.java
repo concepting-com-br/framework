@@ -102,10 +102,6 @@ public class LanguageSelectorComponent extends ListPropertyComponent{
                     onChange.append("=");
                     onChange.append(ActionType.CHANGE_CURRENT_LANGUAGE.getMethod());
                     onChange.append("&");
-                    onChange.append(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
-                    onChange.append("=");
-                    onChange.append(ActionFormConstants.DEFAULT_ROOT_FORWARD_ID);
-                    onChange.append("&");
                     onChange.append(SystemConstants.CURRENT_LANGUAGE_ATTRIBUTE_ID);
                     onChange.append("=' + this.value);");
                     

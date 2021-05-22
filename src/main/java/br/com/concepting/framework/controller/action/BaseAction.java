@@ -1,5 +1,6 @@
 package br.com.concepting.framework.controller.action;
 
+import br.com.concepting.framework.constants.ProjectConstants;
 import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.form.ActionFormController;
@@ -19,6 +20,7 @@ import br.com.concepting.framework.security.exceptions.PermissionDeniedException
 import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.service.interfaces.IService;
 import br.com.concepting.framework.service.util.ServiceUtil;
+import br.com.concepting.framework.ui.constants.UIConstants;
 import br.com.concepting.framework.util.PropertyUtil;
 import org.apache.commons.beanutils.ConstructorUtils;
 import org.apache.commons.beanutils.MethodUtils;
@@ -297,7 +299,7 @@ public abstract class BaseAction<M extends BaseModel>{
      * @throws Throwable Occurs when was not possible to execution the
      * operation.
      */
-    public Forward processRequest(BaseActionForm<M> actionForm, SystemController systemController, ActionFormController actionFormController, SecurityController securityController) throws Throwable{
+    public String processRequest(BaseActionForm<M> actionForm, SystemController systemController, ActionFormController actionFormController, SecurityController securityController) throws Throwable{
         if(actionForm == null || systemController == null || actionFormController == null || securityController == null)
             return null;
         
@@ -308,16 +310,29 @@ public abstract class BaseAction<M extends BaseModel>{
         
         try{
             String action = this.actionForm.getAction();
-            
+            ActionForm actionFormAnnotation = this.actionForm.getClass().getAnnotation(ActionForm.class);
+            Forward forwardAnnotation = null;
+    
             if(action != null && action.length() > 0){
                 Method method = getClass().getMethod(action);
-                Forward forward = method.getAnnotation(Forward.class);
                 
                 method.invoke(this);
+    
+                forwardAnnotation = method.getAnnotation(Forward.class);
                 
-                return forward;
+                if(actionFormAnnotation != null && forwardAnnotation != null){
+                    StringBuilder forwardUrl = new StringBuilder();
+    
+                    forwardUrl.append("/");
+                    forwardUrl.append(UIConstants.DEFAULT_PAGES_DIR);
+                    forwardUrl.append(actionFormAnnotation.action());
+                    forwardUrl.append("/");
+                    forwardUrl.append(forwardAnnotation.url());
+                    
+                    return forwardUrl.toString();
+                }
             }
-            
+    
             return null;
         }
         catch(Throwable e){

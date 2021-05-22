@@ -5,6 +5,7 @@ import br.com.concepting.framework.controller.form.constants.ActionFormConstants
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.*;
 import br.com.concepting.framework.model.util.ModelUtil;
+import br.com.concepting.framework.resources.exceptions.InvalidResourcesException;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.exceptions.PermissionDeniedException;
@@ -81,17 +82,10 @@ public class SystemFilter extends BaseFilter{
                 url.append("=");
                 url.append(actionMethod);
             
-                if(actionMethod != ActionType.REFRESH.getMethod()){
-                    url.append("&");
-                    url.append(ActionFormConstants.FORWARD_ATTRIBUTE_ID);
-                    url.append("=");
-                    url.append(ActionFormConstants.DEFAULT_FORWARD_ID);
-                }
-            
                 systemController.forward(url.toString());
             }
         }
         else
-            systemController.forward(UIConstants.DEFAULT_ERROR_URL);
+            throw new InvalidResourcesException(systemController.getRequestURL());
     }
 }

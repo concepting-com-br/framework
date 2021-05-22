@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 public @interface ActionForm{
     String name() default "";
     String action() default "";
-    Forward[] forwards() default {@Forward(name=ActionFormConstants.DEFAULT_FORWARD_ID, isDefault = true, url="index.jsp"),
-                                  @Forward(name=ActionFormConstants.DEFAULT_ROOT_FORWARD_ID, isDefault = false, url="/")};
+    Forward defaultForward() default @Forward(name=ActionFormConstants.DEFAULT_FORWARD_ID, url="index.jsp");
+    Forward[] forwards() default {};
 }

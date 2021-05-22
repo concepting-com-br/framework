@@ -66,7 +66,7 @@ public class ActionFormServlet extends HttpServlet{
 			String contentId = systemController.getRequestParameterValue(Constants.CONTENT_ATTRIBUTE_ID);
 
 			if(contentId != null && contentId.length() > 0){
-				byte content[] = (byte[])systemController.getAttribute(contentId, ScopeType.SESSION);
+				byte content[] = systemController.getAttribute(contentId, ScopeType.SESSION);
 
 				if(content != null){
 					String contentType = systemController.getRequestParameterValue(Constants.CONTENT_TYPE_ATTRIBUTE_ID);

@@ -5,6 +5,7 @@ import br.com.concepting.framework.audit.resources.AuditorResources;
 import br.com.concepting.framework.audit.resources.AuditorResourcesLoader;
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.constants.ProjectConstants;
+import br.com.concepting.framework.constants.SystemConstants;
 import br.com.concepting.framework.controller.action.BaseAction;
 import br.com.concepting.framework.controller.form.BaseActionForm;
 import br.com.concepting.framework.exceptions.InternalErrorException;
@@ -1767,12 +1768,13 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                         uiPageFilename.append(this.build.getBaseDirname());
                         uiPageFilename.append(FileUtil.getDirectorySeparator());
                         uiPageFilename.append(ProjectConstants.DEFAULT_UI_DIR);
-                        uiPageFilename.append(ProjectConstants.DEFAULT_UI_PAGES_DIR);
+                        uiPageFilename.append(UIConstants.DEFAULT_PAGES_DIR);
+                        uiPageFilename.append(FileUtil.getDirectorySeparator());
                     }
                     
                     uiPageFilename.append(actionFormUrl.substring(1));
                     uiPageFilename.append(FileUtil.getDirectorySeparator());
-                    uiPageFilename.append(ProjectConstants.DEFAULT_UI_PAGE_FILE_ID);
+                    uiPageFilename.append(UIConstants.DEFAULT_PAGE_FILE_ID);
                     uiPageFile = new File(uiPageFilename.toString());
                     
                     uiPageImagesDirname.append(uiPageDirname.toString());
@@ -1886,8 +1888,8 @@ public class ModelAnnotationProcessor extends BaseAnnotationProcessor{
                         moduleMappingFilename.append(this.build.getBaseDirname());
                         moduleMappingFilename.append(FileUtil.getDirectorySeparator());
                         moduleMappingFilename.append(ProjectConstants.DEFAULT_UI_DIR);
-                        moduleMappingFilename.append(ProjectConstants.DEFAULT_MODULE_DESCRIPTORS_DIR);
-                        moduleMappingFilename.append("/");
+                        moduleMappingFilename.append(SystemConstants.DEFAULT_DESCRIPTORS_DIR);
+                        moduleMappingFilename.append(FileUtil.getDirectorySeparator());
                     }
                     
                     moduleMappingFilename.append(name);

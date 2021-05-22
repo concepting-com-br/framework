@@ -38,8 +38,6 @@ public abstract class ProjectConstants{
     public static final String DEFAULT_JAVA_FILE_EXTENSION = ".java";
     public static final String DEFAULT_MODEL_CLASS_TEMPLATE_FILE_ID = "modelClass.xml";
     public static final String DEFAULT_MODEL_CLASS_TEST_TEMPLATE_FILE_ID = "modelClassTest.xml";
-    public static final String DEFAULT_MODULE_DESCRIPTORS_DIR = "WEB-INF";
-    public static final String DEFAULT_MODULE_MAPPINGS_FILE_ID = DEFAULT_RESOURCES_DIR.concat(DEFAULT_MODULE_DESCRIPTORS_DIR).concat("/web.xml");
     public static final String DEFAULT_MODULE_MAPPING_TEMPLATE_FILE_ID = "moduleMapping.xml";
     public static final String DEFAULT_PERSISTENCE_CLASS_TEMPLATE_FILE_ID = "persistenceClass.xml";
     public static final String DEFAULT_PERSISTENCE_DATA_TEMPLATE_FILE_ID = "persistenceData.xml";
@@ -54,9 +52,7 @@ public abstract class ProjectConstants{
     public static final String DEFAULT_SERVICE_INTERFACE_TEMPLATE_FILE_ID = "serviceInterface.xml";
     public static final String DEFAULT_TEMPLATES_DIR = DEFAULT_SOURCE_DIR.concat("templates/");
     public static final String DEFAULT_TESTS_DIR = DEFAULT_SOURCE_DIR.concat("tests/java/");
-    public static final String DEFAULT_UI_PAGE_FILE_ID = "index.jsp";
     public static final String DEFAULT_UI_PAGE_TEMPLATE_FILE_ID = "uiPage.xml";
-    public static final String DEFAULT_UI_PAGES_DIR = DEFAULT_MODULE_DESCRIPTORS_DIR.concat("/jsp/");
     public static final String DEFAULT_WEB_SERVICE_CLASS_TEMPLATE_FILE_ID = "webServiceClass.xml";
     public static final String DEFAULT_WEB_SERVICE_INTERFACE_TEMPLATE_FILE_ID = "webServiceInterface.xml";
 }

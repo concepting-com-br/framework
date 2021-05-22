@@ -14,6 +14,7 @@ import br.com.concepting.framework.util.types.ContentType;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DateFormatSymbols;
 import java.util.Locale;
@@ -408,7 +409,7 @@ public class PageComponent extends BaseComponent{
         styleComponent.setPageContext(pageContext);
         styleComponent.setOutputStream(outputStream);
         
-        String requestPath = StringUtil.replaceAll(systemController.getRequestPath(), ProjectConstants.DEFAULT_UI_PAGES_DIR, "");
+        String requestPath = StringUtil.replaceAll(systemController.getRequestPath(), UIConstants.DEFAULT_PAGES_DIR, "");
         
         int pos = (requestPath != null && requestPath.length() > 0 ? requestPath.lastIndexOf("/") : -1);
         

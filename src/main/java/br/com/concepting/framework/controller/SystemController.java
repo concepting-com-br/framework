@@ -66,14 +66,16 @@ import br.com.concepting.framework.webservice.constants.WebServiceConstants;
  * along with this program.  If not, see http://www.gnu.org/licenses.</pre>
  */
 public class SystemController{
-	private PageContext                       pageContext       = null;
-	private HttpServletRequest                request           = null;
-	private HttpServletResponse               response          = null;
-	private Map<String, RequestParameterInfo> requestParameters = null;
-	private Collection<Cookie>                cookies           = null;
-	private HttpSession                       session           = null;
-	private Boolean                           hasOutputContent  = null;
-
+	private PageContext                       pageContext              = null;
+	private HttpServletRequest                request                  = null;
+	private HttpServletResponse               response                 = null;
+	private Map<String, RequestParameterInfo> requestParameters        = null;
+	private Collection<Cookie>                cookies                  = null;
+	private HttpSession                       session                  = null;
+	private Boolean                           hasOutputContent         = null;
+	private Boolean                           hasForwardedOrRedirected = null;
+	private String                            forwarwedOrRedirectedUrl = null;
+	
 	/**
 	 * Constructor - Initialize the controller.
 	 *
@@ -121,6 +123,14 @@ public class SystemController{
 		loadSession();
 		loadEncoding();
 		loadRequestParameters();
+	}
+	
+	public String getForwarwedOrRedirectedUrl(){
+		return getAttribute(SystemConstants.FORWARDED_OR_REDIRECTED_URL, ScopeType.REQUEST);
+	}
+	
+	public void setForwarwedOrRedirectedUrl(String forwarwedOrRedirectedUrl){
+		setAttribute(SystemConstants.FORWARDED_OR_REDIRECTED_URL, forwarwedOrRedirectedUrl, ScopeType.REQUEST);
 	}
 	
 	/**
@@ -663,7 +673,16 @@ public class SystemController{
 	public PageContext getPageContext(){
 		return this.pageContext;
 	}
-
+	
+	/**
+	 * Indicates if a content was redirected or forwarded in the response.
+	 *
+	 * @return True/False.
+	 */
+	public Boolean hasForwardedOrRedirected(){
+		return this.hasForwardedOrRedirected;
+	}
+	
 	/**
 	 * Indicates if a content was flushed in the response.
 	 *
@@ -1009,6 +1028,8 @@ public class SystemController{
 			}
 			catch(Throwable e){
 			}
+			
+			this.hasForwardedOrRedirected = true;
 		}
 	}
 
@@ -1029,6 +1050,8 @@ public class SystemController{
 				catch(Throwable e1){
 				}
 			}
+			
+			this.hasForwardedOrRedirected = true;
 		}
 	}
 
@@ -1045,16 +1068,22 @@ public class SystemController{
 			setCurrentException(e);
 
 			if(this.response != null){
-				if(ExceptionUtil.isUserNotAuthorized(e))
-					this.response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
-				else if(ExceptionUtil.isPermissionDeniedException(e))
-					this.response.sendError(Response.Status.FORBIDDEN.getStatusCode());
-				else if(ExceptionUtil.isInvalidResourceException(e))
-					this.response.sendError(Response.Status.NOT_FOUND.getStatusCode(), e.getMessage());
-				else if(ExceptionUtil.isInternalErrorException(e))
-					this.response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage());
+				if(isWebServicesRequest()){
+					if(ExceptionUtil.isUserNotAuthorized(e))
+						this.response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
+					else if(ExceptionUtil.isPermissionDeniedException(e))
+						this.response.sendError(Response.Status.FORBIDDEN.getStatusCode());
+					else if(ExceptionUtil.isInvalidResourceException(e))
+						this.response.sendError(Response.Status.NOT_FOUND.getStatusCode(), e.getMessage());
+					else if(ExceptionUtil.isInternalErrorException(e))
+						this.response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage());
+					else
+						this.response.sendError(Response.Status.PRECONDITION_FAILED.getStatusCode(), e.getMessage());
+					
+					this.hasForwardedOrRedirected = true;
+				}
 				else
-					this.response.sendError(Response.Status.PRECONDITION_FAILED.getStatusCode(), e.getMessage());
+					forward(UIConstants.DEFAULT_ERROR_URL);
 			}
 		}
 		catch(Throwable e1){

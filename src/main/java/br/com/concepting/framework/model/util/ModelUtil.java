@@ -62,7 +62,7 @@ public class ModelUtil{
         
         if(classes != null && !classes.isEmpty()){
             try{
-                return classes.parallelStream().map(c -> (Class<? extends MainConsoleModel>) c).findFirst().get();
+                return classes.parallelStream().map(c -> (Class<? extends MainConsoleModel>) c).skip(classes.size() - 1).findFirst().get();
             }
             catch(Throwable e){
             }

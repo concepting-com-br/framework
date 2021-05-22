@@ -22,11 +22,11 @@
 		    </welcome-file-list>  
 		    <error-page> 
 		        <exception-type>java.lang.Throwable</exception-type>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>400</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>401</error-code>  
@@ -34,7 +34,7 @@
 		    </error-page>  
 		    <error-page> 
 		        <error-code>402</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>403</error-code>  
@@ -46,71 +46,71 @@
 		    </error-page>  
 		    <error-page> 
 		        <error-code>405</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>406</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>407</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>408</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>409</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>410</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>411</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>412</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>413</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>414</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>415</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>500</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>501</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>502</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>503</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>504</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page>  
 		    <error-page> 
 		        <error-code>505</error-code>  
-		        <location>/WEB-INF/jsp/error.jsp</location> 
+		        <location>/</location> 
 		    </error-page> 
 		</web-app>
 	</artifact>

@@ -15,7 +15,7 @@ public class SkinUtil{
     
         if(classes != null && !classes.isEmpty()){
             try{
-                System system = classes.parallelStream().map(c -> c.getAnnotation(System.class)).findFirst().get();
+                System system = classes.parallelStream().map(c -> c.getAnnotation(System.class)).skip(classes.size() - 1).findFirst().get();
     
                 return system.defaultSkin();
             }
@@ -31,7 +31,7 @@ public class SkinUtil{
     
         if(classes != null && !classes.isEmpty()){
             try{
-                System system = classes.parallelStream().map(c -> c.getAnnotation(System.class)).findFirst().get();
+                System system = classes.parallelStream().map(c -> c.getAnnotation(System.class)).skip(classes.size() - 1).findFirst().get();
             
                 return Arrays.asList(system.availableSkins());
             }

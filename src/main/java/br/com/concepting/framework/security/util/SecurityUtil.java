@@ -60,7 +60,7 @@ public class SecurityUtil{
     
         if(classes != null && !classes.isEmpty()){
             try{
-                return classes.parallelStream().map(c -> (Class<? extends LoginSessionModel>) c).findFirst().get();
+                return classes.parallelStream().map(c -> (Class<? extends LoginSessionModel>) c).skip(classes.size() - 1).findFirst().get();
             }
             catch(Throwable e){
             }
@@ -74,7 +74,7 @@ public class SecurityUtil{
     
         if(classes != null && !classes.isEmpty()){
             try{
-                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).findFirst().get();
+                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).skip(classes.size() - 1).findFirst().get();
     
                 return security.loginSessionTimeout();
             }
@@ -90,7 +90,7 @@ public class SecurityUtil{
     
         if(classes != null && !classes.isEmpty()){
             try{
-                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).findFirst().get();
+                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).skip(classes.size() - 1).findFirst().get();
             
                 return security.cryptoAlgorithm();
             }
@@ -106,7 +106,7 @@ public class SecurityUtil{
         
         if(classes != null && !classes.isEmpty()){
             try{
-                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).findFirst().get();
+                Security security = classes.parallelStream().map(c -> c.getAnnotation(Security.class)).skip(classes.size() - 1).findFirst().get();
                 
                 return security.cryptoKeySIze();
             }

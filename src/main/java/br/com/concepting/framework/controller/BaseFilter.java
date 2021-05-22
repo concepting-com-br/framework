@@ -106,14 +106,16 @@ public abstract class BaseFilter implements Filter{
         else{
             this.systemController = new SystemController((HttpServletRequest) request, (HttpServletResponse) response);
             this.systemController.setCurrentException(null);
-            
+            this.systemController.setForwarwedOrRedirectedUrl(null);
+    
             this.securityController = this.systemController.getSecurityController();
             
             try{
                 initialize();
                 process();
                 
-                filterChain.doFilter(request, response);
+                if(this.systemController.hasForwardedOrRedirected() == null || !this.systemController.hasForwardedOrRedirected())
+                    filterChain.doFilter(request, response);
             }
             catch(UserNotAuthorizedException | PermissionDeniedException | InternalErrorException e){
                 this.systemController.forward(e);

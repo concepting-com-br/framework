@@ -15,11 +15,15 @@
 		<set var="loginParameterModelClass" value="@{loginParameterPropertyInfo.clazz}"/>
 		<set var="loginParameterModelClassName" value="@{loginParameterModelClass.name}"/>
 		<set var="loginParameterModelName" value="@{loginParameterModelClass.simpleName}"/>
-		
+
+		import br.com.concepting.framework.controller.form.annotations.ActionForm;
+
 		import #{clazz.name};
 		import @{userModelClassName};
 		import @{loginParameterModelClassName};
-	
+		<set var="actionFormName" value="br.com.concepting.framework.controller.form.util.ActionFormUtil.getActionFormIdByModel(#{clazz})"/>
+		<set var="actionFormUrl" value="br.com.concepting.framework.model.util.ModelUtil.getUrlByModel(#{clazz})"/>
+
 		/**
 		 * Class that defines the form of the login session UI.
 		 *
@@ -27,6 +31,7 @@
 		 * @version @{build.version}
 		 * @since @{now}
 		 */
+		@ActionForm(name="@{actionFormName}", action="@{actionFormUrl}")
 		@SuppressWarnings("javadoc")
 		public class @{name} extends br.com.concepting.framework.security.controller.form.LoginSessionActionForm&lt;#{clazz.simpleName}, @{userModelName}, @{loginParameterModelName}&gt;{
 			private static final long serialVersionUID = @{serialVersionUID}L;	
