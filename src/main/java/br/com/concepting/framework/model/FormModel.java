@@ -4,6 +4,7 @@ import br.com.concepting.framework.model.annotations.Model;
 import br.com.concepting.framework.model.annotations.Property;
 import br.com.concepting.framework.model.types.ConditionType;
 import br.com.concepting.framework.model.types.ValidationType;
+import br.com.concepting.framework.persistence.types.RelationJoinType;
 import br.com.concepting.framework.persistence.types.RelationType;
 import br.com.concepting.framework.util.types.SearchType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -51,7 +52,7 @@ public class FormModel extends BaseModel{
     @Property(isForSearch = true, searchType = SearchType.CASE_INSENSITIVE, searchCondition = ConditionType.CONTAINS, maximumLength = 1000)
     private String description = null;
     
-    @Property(relationType = RelationType.ONE_TO_MANY)
+    @Property(relationType = RelationType.ONE_TO_MANY, relationJoinType = RelationJoinType.INNER_JOIN)
     @JsonIgnore
     private Collection<? extends ObjectModel> objects = null;
     

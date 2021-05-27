@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE artifacts>
+
+<artifacts>
+	<artifact name="persistenceData1">
+		<set var="title" value="br.com.concepting.framework.util.StringUtil.capitalize(@{build.name})"/>
+		<set var="copyright" value="br.com.concepting.framework.util.DateTimeUtil.format(@{now}, 'yyyy')"/>
+		<set var="copyright" value="@{title}.concat(' ').concat(@{copyright})"/>
+		<set var="password" value="br.com.concepting.framework.security.util.SecurityUtil.encryptPassword('admin')"/>
+		<set var="email" value="@{user.name}.concat('@mydomain.com')"/>
+		<set var="actionFormName" value="br.com.concepting.framework.controller.form.util.ActionFormUtil.getActionFormIdByModel(#{clazz})"/>
+		insert into @{openQuote}url@{closeQuote} (id, path) values (1, '*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (2, '/');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (3, '/index.jsp');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (4, '/*action=download*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (5, '/mainConsole*action=changeCurrentLanguage*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (6, '/mainConsole*action=changeCurrentSkin*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (7, '/security/loginSession*action=init*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (8, '/security/loginSession*action=refresh*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (9, '/security/loginSession*action=logIn*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (10, '/security/loginSession*action=back*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (11, '/security/loginSession*action=validateMfaToken*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (12, '/security/loginSession*action=loadForgotPassword*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (13, '/security/loginSession*action=rememberUserAndPassword*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (14, '/security/loginSession*action=sendForgottenPassword*');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (15, '/webServices/security/loginSession/logIn');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (16, '/webServices/security/loginSession/validateMfaToken');
+		insert into @{openQuote}url@{closeQuote} (id, path) values (17, '/webServices/security/loginSession/sendForgottenPassword');
+		
+		insert into @{openQuote}access@{closeQuote} (id, urlId, blocked) values (1, 1, false);
+
+		insert into @{openQuote}systemModule@{closeQuote} (id, name, title, description, url, copyright, version, active) values (1, '@{build.name}', '@{title}', '@{title}', '/@{build.name}', '@{copyright}', '@{build.version}', true);
+		
+		insert into @{openQuote}form@{closeQuote} (id, systemModuleId, name, title, description) values (1, 1, '@{actionFormName}', '#{ui}', '#{ui}');
+
+		insert into @{openQuote}object@{closeQuote} (id, type, formId, name, sequence) values (1, 'MENU_ITEM', 1, 'menuAdministration', 1);
+		
+		insert into @{openQuote}loginParameter@{closeQuote} (id, expirePasswordInterval, changePasswordInterval, changePassword, expirePasswordDateTime, useStrongPassword, minimumPasswordLength, multipleLogins, loginTries, mfa, language) values (1, 30, 5, true, now(), true, 8, true, 3, false, 'en_US');
+
+		insert into @{openQuote}user@{closeQuote} (id, name, fullName, email, password, active, system, creation, superUser, loginParameterId) values (1, '@{user.name}', '@{user.name}', '@{email}', '@{password}', true, false, now(), true, 1);
+		insert into @{openQuote}user@{closeQuote} (id, name, fullName, email, password, active, system, creation, superUser) values (2, '@{user.name}', '@{user.name}', '@{email}', '@{password}', true, true, now(), true);
+		insert into @{openQuote}user@{closeQuote} (id, name, fullName, email, password, active, system, creation, superUser) values (3, 'root', 'root', '@{email}', '@{password}', true, true, now(), true);
+
+		insert into @{openQuote}group@{closeQuote} (id, name, title) values (1, 'administrators', 'Administrators');
+		insert into @{openQuote}group@{closeQuote} (id, name, title) values (2, 'users', 'Users');
+		
+		insert into @{openQuote}groupAccess@{closeQuote} (groupId, accessId) values (1, 1);
+		
+		insert into @{openQuote}userGroup@{closeQuote} (userId, groupId) values (1, 1);
+		insert into @{openQuote}userGroup@{closeQuote} (userId, groupId) values (2, 1);
+		insert into @{openQuote}userGroup@{closeQuote} (userId, groupId) values (3, 1);
+
+		insert into @{openQuote}groupObject@{closeQuote} (groupId, objectId) values (1, 1);
+
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 2);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 3);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 4);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 5);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 6);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 7);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 8);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 9);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 10);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 11);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 12);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 13);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 14);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 15);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 16);
+		insert into @{openQuote}systemModuleExclusionUrls@{closeQuote} (systemModuleId, urlId) values (1, 17);
+	</artifact>
+</artifacts>

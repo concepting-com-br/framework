@@ -12,6 +12,7 @@ import br.com.concepting.framework.controller.types.ScopeType;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.BaseModel;
 import br.com.concepting.framework.model.FormModel;
+import br.com.concepting.framework.model.ObjectModel;
 import br.com.concepting.framework.model.SystemModuleModel;
 import br.com.concepting.framework.model.exceptions.ItemNotFoundException;
 import br.com.concepting.framework.resources.exceptions.InvalidResourcesException;
@@ -27,6 +28,7 @@ import org.apache.commons.beanutils.MethodUtils;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 
 /**
  * Class that defines the basic implementation of the actions of a form.
@@ -207,8 +209,9 @@ public abstract class BaseAction<M extends BaseModel>{
         try{
             LoginSessionModel loginSession = this.securityController.getLoginSession();
             SystemModuleModel systemModule = (loginSession != null ? loginSession.getSystemModule() : null);
-            ActionForm actionForm = this.actionForm.getClass().getAnnotation(ActionForm.class);
-            FormModel form = (systemModule != null ? systemModule.getForm(actionForm.name()) : null);
+            ActionForm actionFormAnnotation = this.actionForm.getClass().getAnnotation(ActionForm.class);
+            FormModel form = (systemModule != null ? systemModule.getForm(actionFormAnnotation.name()) : null);
+            BaseActionForm<M> actionForm = getActionForm();
             
             if(form != null){
                 Class<FormModel> formClass = (Class<FormModel>) form.getClass();
@@ -223,12 +226,8 @@ public abstract class BaseAction<M extends BaseModel>{
                 if(formService != null){
                     form = formService.find(form);
                     form = formService.loadReference(form, SystemConstants.OBJECTS_ATTRIBUTE_ID);
-                    
-                    systemModule.setForm(form);
-                    
-                    loginSession.setSystemModule(systemModule);
-                    
-                    this.securityController.setLoginSession(loginSession);
+
+                    actionForm.setObjects(form.getObjects());
                 }
             }
         }

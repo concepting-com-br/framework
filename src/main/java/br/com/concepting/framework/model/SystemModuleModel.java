@@ -5,6 +5,7 @@ import br.com.concepting.framework.model.annotations.Model;
 import br.com.concepting.framework.model.annotations.Property;
 import br.com.concepting.framework.model.types.ConditionType;
 import br.com.concepting.framework.model.types.ValidationType;
+import br.com.concepting.framework.persistence.types.RelationJoinType;
 import br.com.concepting.framework.persistence.types.RelationType;
 import br.com.concepting.framework.util.types.ByteMetricType;
 import br.com.concepting.framework.util.types.ContentType;
@@ -73,11 +74,11 @@ public class SystemModuleModel extends BaseModel{
     @Property(validations = ValidationType.CONTENT_TYPE, contentTypes = {ContentType.JPG, ContentType.PNG, ContentType.GIF}, contentSizeUnit = ByteMetricType.MEGA_BYTE)
     private byte[] logo = null;
     
-    @Property(relationType = RelationType.ONE_TO_MANY)
+    @Property(relationType = RelationType.ONE_TO_MANY, relationJoinType = RelationJoinType.INNER_JOIN)
     @JsonIgnore
     private Collection<? extends FormModel> forms = null;
     
-    @Property(relationType = RelationType.MANY_TO_MANY)
+    @Property(relationType = RelationType.MANY_TO_MANY, relationJoinType = RelationJoinType.INNER_JOIN)
     private Collection<? extends UrlModel> exclusionUrls = null;
     
     /**
@@ -203,21 +204,6 @@ public class SystemModuleModel extends BaseModel{
                     return (F) form;
         
         return null;
-    }
-    
-    /**
-     * Defines the instance that contains a specific form of the system.
-     *
-     * @param form Instance that contains a specific form of the system.
-     */
-    @SuppressWarnings("unchecked")
-    public void setForm(FormModel form){
-        if(this.forms != null){
-            int pos = ((List<FormModel>) this.forms).indexOf(form);
-            
-            if(pos >= 0)
-                ((List<FormModel>) this.forms).set(pos, form);
-        }
     }
     
     /**

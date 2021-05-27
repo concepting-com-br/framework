@@ -30,10 +30,9 @@ public class SystemFilter extends BaseFilter{
                SS extends SystemSessionModel> void process() throws UserNotAuthorizedException, PermissionDeniedException, InternalErrorException{
         SystemController systemController = getSystemController();
         SecurityController securityController = getSecurityController();
-        L loginSession = (securityController != null ? securityController.getLoginSession() : null);
-        SM systemModule = (loginSession != null ? loginSession.getSystemModule() : null);
     
-        if(systemModule != null && systemModule.getId() != null && systemModule.getId() > 0 && systemModule.getActive() != null && systemModule.getActive() && systemController != null && securityController != null){
+        if(systemController != null && securityController != null){
+            L loginSession = (securityController != null ? securityController.getLoginSession() : null);
             U user = (loginSession != null ? loginSession.getUser() : null);
             LP loginParameter = (user != null ? user.getLoginParameter() : null);
             Class<? extends BaseModel> modelClass = null;

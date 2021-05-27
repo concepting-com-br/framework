@@ -170,16 +170,8 @@ public class MessageBoxComponent extends DialogBoxComponent{
             if(this.exception == null){
                 ErrorData errorData = this.pageContext.getErrorData();
                 
-                if(errorData != null && errorData.getStatusCode() > 0){
-                    if(errorData.getStatusCode() == Response.Status.UNAUTHORIZED.getStatusCode())
-                        this.exception = new UserNotAuthorizedException();
-                    else if(errorData.getStatusCode() == Response.Status.FORBIDDEN.getStatusCode())
-                        this.exception = new PermissionDeniedException();
-                    else if(errorData.getStatusCode() == Response.Status.NOT_FOUND.getStatusCode())
-                        this.exception = new InvalidResourcesException(errorData.getRequestURI());
-                    else if(errorData.getStatusCode() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode())
-                        this.exception = new InternalErrorException(errorData.getThrowable());
-                }
+                if(errorData != null && errorData.getStatusCode() >= 0)
+                    this.exception = errorData.getThrowable();
             }
             
             if(this.exception != null){

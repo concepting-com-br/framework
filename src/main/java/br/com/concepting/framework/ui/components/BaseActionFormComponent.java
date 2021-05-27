@@ -4,12 +4,10 @@ import br.com.concepting.framework.annotations.System;
 import br.com.concepting.framework.constants.Constants;
 import br.com.concepting.framework.controller.action.types.ActionType;
 import br.com.concepting.framework.controller.form.ActionFormController;
+import br.com.concepting.framework.controller.form.BaseActionForm;
 import br.com.concepting.framework.controller.form.constants.ActionFormConstants;
 import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.model.FormModel;
-import br.com.concepting.framework.model.MainConsoleModel;
-import br.com.concepting.framework.model.ObjectModel;
-import br.com.concepting.framework.model.SystemModuleModel;
+import br.com.concepting.framework.model.*;
 import br.com.concepting.framework.model.constants.ModelConstants;
 import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.resources.PropertiesResources;
@@ -29,6 +27,7 @@ import br.com.concepting.framework.util.types.PositionType;
 
 import javax.servlet.jsp.JspException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -1109,6 +1108,8 @@ public abstract class BaseActionFormComponent extends BaseComponent{
         
         if(actionFormComponent != null)
             this.actionFormController = actionFormComponent.getActionFormController();
+        else
+            this.actionFormController = getSystemController().getActionFormController(this.actionFormName);
         
         return this.actionFormController;
     }
@@ -1572,19 +1573,26 @@ public abstract class BaseActionFormComponent extends BaseComponent{
      */
     protected void buildPermissions() throws InternalErrorException{
         String name = getName();
+        ActionFormController actionFormController = getActionFormController();
+        SecurityController securityController = getSecurityController();
         
-        if(this.actionFormName != null && this.actionFormName.length() > 0 && name != null && name.length() > 0){
-            SecurityController securityController = getSecurityController();
-            LoginSessionModel loginSession = (securityController != null ? securityController.getLoginSession() : null);
-            SystemModuleModel systemModule = (loginSession != null ? loginSession.getSystemModule() : null);
-            FormModel form = (systemModule != null ? systemModule.getForm(this.actionFormName) : null);
-            ObjectModel object = (form != null ? form.getObject(name) : null);
+        if(actionFormController != null && securityController != null && name != null && name.length() > 0){
             ComponentType componentType = getComponentType();
+            BaseActionForm<? extends BaseModel> actionForm = actionFormController.getActionFormInstance();
+            Collection<? extends ObjectModel> objects = (actionForm != null ? actionForm.getObjects() : null);
+            ObjectModel object = null;
+            
+            try{
+                object = (objects != null ? objects.parallelStream().filter(o -> o.getName().equals(name)).findFirst().get() : null);
+            }
+            catch(Throwable e){
+            }
             
             if(object != null && object.getType() != null && componentType != null && componentType.equals(object.getType())){
                 this.hasPermission = securityController.isLoginSessionAuthenticated();
                 
                 if(this.hasPermission != null && this.hasPermission){
+                    LoginSessionModel loginSession = securityController.getLoginSession();
                     UserModel user = loginSession.getUser();
                     Boolean superUser = user.isSuperUser();
                     

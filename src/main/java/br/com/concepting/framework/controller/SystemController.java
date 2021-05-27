@@ -1068,22 +1068,18 @@ public class SystemController{
 			setCurrentException(e);
 
 			if(this.response != null){
-				if(isWebServicesRequest()){
-					if(ExceptionUtil.isUserNotAuthorized(e))
-						this.response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
-					else if(ExceptionUtil.isPermissionDeniedException(e))
-						this.response.sendError(Response.Status.FORBIDDEN.getStatusCode());
-					else if(ExceptionUtil.isInvalidResourceException(e))
-						this.response.sendError(Response.Status.NOT_FOUND.getStatusCode(), e.getMessage());
-					else if(ExceptionUtil.isInternalErrorException(e))
-						this.response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage());
-					else
-						this.response.sendError(Response.Status.PRECONDITION_FAILED.getStatusCode(), e.getMessage());
-					
-					this.hasForwardedOrRedirected = true;
-				}
+				if(ExceptionUtil.isUserNotAuthorized(e))
+					this.response.sendError(Response.Status.UNAUTHORIZED.getStatusCode());
+				else if(ExceptionUtil.isPermissionDeniedException(e))
+					this.response.sendError(Response.Status.FORBIDDEN.getStatusCode());
+				else if(ExceptionUtil.isInvalidResourceException(e))
+					this.response.sendError(Response.Status.NOT_FOUND.getStatusCode(), e.getMessage());
+				else if(ExceptionUtil.isInternalErrorException(e))
+					this.response.sendError(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), e.getMessage());
 				else
-					forward(UIConstants.DEFAULT_ERROR_URL);
+					this.response.sendError(Response.Status.PRECONDITION_FAILED.getStatusCode(), e.getMessage());
+				
+				this.hasForwardedOrRedirected = true;
 			}
 		}
 		catch(Throwable e1){

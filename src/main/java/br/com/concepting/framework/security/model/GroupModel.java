@@ -5,6 +5,7 @@ import br.com.concepting.framework.model.annotations.Model;
 import br.com.concepting.framework.model.annotations.Property;
 import br.com.concepting.framework.model.types.ConditionType;
 import br.com.concepting.framework.model.types.ValidationType;
+import br.com.concepting.framework.persistence.types.RelationJoinType;
 import br.com.concepting.framework.persistence.types.RelationType;
 import br.com.concepting.framework.util.StringUtil;
 import br.com.concepting.framework.util.types.SearchType;
@@ -51,10 +52,10 @@ public class GroupModel extends BaseModel{
     @Property(relationType = RelationType.MANY_TO_MANY)
     private Collection<? extends UserModel> users = null;
     
-    @Property(relationType = RelationType.MANY_TO_MANY)
+    @Property(relationType = RelationType.MANY_TO_MANY, relationJoinType = RelationJoinType.INNER_JOIN)
     private Collection<? extends ObjectModel> objects = null;
     
-    @Property(relationType = RelationType.MANY_TO_MANY)
+    @Property(relationType = RelationType.MANY_TO_MANY, relationJoinType = RelationJoinType.INNER_JOIN)
     private Collection<? extends AccessModel> accesses = null;
     
     /**

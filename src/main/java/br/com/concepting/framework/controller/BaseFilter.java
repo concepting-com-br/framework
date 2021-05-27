@@ -113,12 +113,14 @@ public abstract class BaseFilter implements Filter{
             try{
                 initialize();
                 process();
-                
+    
                 if(this.systemController.hasForwardedOrRedirected() == null || !this.systemController.hasForwardedOrRedirected())
                     filterChain.doFilter(request, response);
             }
             catch(UserNotAuthorizedException | PermissionDeniedException | InternalErrorException e){
-                this.systemController.forward(e);
+                this.systemController.setCurrentException(e);
+                
+                this.systemController.forward("/");
             }
         }
     }

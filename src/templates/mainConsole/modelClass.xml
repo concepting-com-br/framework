@@ -34,6 +34,7 @@
 		        @Property(propertyId="email", mappedPropertyId="email"),
 		        @Property(propertyId="phoneNumber", mappedPropertyId="phoneNumber"),
 		        @Property(propertyId="active", mappedPropertyId="active"),
+		        @Property(propertyId="system", mappedPropertyId="system"),
 		        @Property(propertyId="creation", mappedPropertyId="creation"),
 		        @Property(propertyId="lastUpdate", mappedPropertyId="lastUpdate"),
 		        @Property(propertyId="lastLogin", mappedPropertyId="lastLogin"),

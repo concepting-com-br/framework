@@ -16,6 +16,7 @@ import br.com.concepting.framework.controller.form.util.ActionFormUtil;
 import br.com.concepting.framework.controller.form.util.ActionFormValidator;
 import br.com.concepting.framework.exceptions.InternalErrorException;
 import br.com.concepting.framework.model.BaseModel;
+import br.com.concepting.framework.model.ObjectModel;
 import br.com.concepting.framework.model.helpers.ModelInfo;
 import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.security.controller.SecurityController;
@@ -67,6 +68,15 @@ public abstract class BaseActionForm<M extends BaseModel> implements Serializabl
     private String validateModelProperties = null;
     private BaseModel model = null;
     private Collection<ActionFormMessage> messages = null;
+    private Collection<? extends ObjectModel> objects = null;
+    
+    public Collection<? extends ObjectModel> getObjects(){
+        return objects;
+    }
+    
+    public void setObjects(Collection<? extends ObjectModel> objects){
+        this.objects = objects;
+    }
     
     /**
      * Returns the actions history.

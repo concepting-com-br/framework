@@ -4,6 +4,8 @@ import br.com.concepting.framework.controller.SystemController;
 import br.com.concepting.framework.controller.action.BaseAction;
 import br.com.concepting.framework.controller.form.ActionFormController;
 import br.com.concepting.framework.controller.form.BaseActionForm;
+import br.com.concepting.framework.model.helpers.ModelInfo;
+import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.security.constants.SecurityConstants;
 import br.com.concepting.framework.security.controller.SecurityController;
 import br.com.concepting.framework.security.exceptions.ExpiredPasswordException;
@@ -14,6 +16,7 @@ import br.com.concepting.framework.security.model.LoginSessionModel;
 import br.com.concepting.framework.security.model.UserModel;
 import br.com.concepting.framework.security.service.interfaces.LoginSessionService;
 import br.com.concepting.framework.security.util.SecurityUtil;
+import br.com.concepting.framework.util.helpers.PropertyInfo;
 
 /**
  * Class that defines the basic implementation of the actions of the login
@@ -54,15 +57,7 @@ public abstract class LoginSessionAction<L extends LoginSessionModel, U extends 
         if(systemController == null || securityController == null || actionForm == null)
             return;
         
-        systemController.removeCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID);
-        
-        L loginSession = securityController.getLoginSession();
-        
-        loadRememberedUserAndPassword(loginSession);
-        
-        actionForm.setModel(loginSession);
-        
-        securityController.setLoginSession(loginSession);
+        loadRememberedUserAndPassword();
     }
     
     /**
@@ -94,16 +89,21 @@ public abstract class LoginSessionAction<L extends LoginSessionModel, U extends 
             return;
         
         LoginSessionService<L, U, LP> service = getService();
-        
+        LP loginParameter = null;
+    
         try{
             loginSession = service.logIn(user);
+    
+            actionForm.setModel((L)loginSession.clone());
             
             user = loginSession.getUser();
+            loginParameter = user.getLoginParameter();
             
-            LP loginParameter = user.getLoginParameter();
-            
-            if(loginParameter.changePassword())
+            if(loginParameter.changePassword()){
+                loadChangePassword(user);
+                
                 throw new ExpiredPasswordException();
+            }
             
             if(loginParameter.isPasswordWillExpire())
                 throw new PasswordWillExpireException(loginParameter.getDaysUntilExpire(), loginParameter.getHoursUntilExpire(), loginParameter.getMinutesUntilExpire(), loginParameter.getSecondsUntilExpire());
@@ -114,8 +114,6 @@ public abstract class LoginSessionAction<L extends LoginSessionModel, U extends 
         finally{
             systemController.addCookie(SecurityConstants.LOGIN_SESSION_ATTRIBUTE_ID, loginSession.getId(), true);
             
-            actionForm.setModel(loginSession);
-            
             securityController.setLoginSession(loginSession);
         }
     }
@@ -123,29 +121,46 @@ public abstract class LoginSessionAction<L extends LoginSessionModel, U extends 
     /**
      * Loads tbe user data stored in cookie.
      *
-     * @param loginSession Instance that contains the properties of the login
      * session.
      * @throws Throwable Occurs when was not possible execute the operation.
      */
-    private void loadRememberedUserAndPassword(L loginSession) throws Throwable{
+    private void loadRememberedUserAndPassword() throws Throwable{
         SecurityController securityController = getSecurityController();
         
         if(securityController == null)
             return;
+    
+        BaseActionForm<L> actionForm = getActionForm();
+        L loginSession = SecurityUtil.getLoginSession((actionForm != null ? actionForm.getModel() : null));
         
-        loginSession = SecurityUtil.getLoginSession(loginSession);
+        if(loginSession != null){
+            U user = loginSession.getUser();
+            String rememberedUserName = securityController.getRememberedUserName();
+            String rememberedPassword = securityController.getRememberedPassword();
+    
+            user.setName(rememberedUserName);
+            user.setPassword(rememberedPassword);
+    
+            loginSession.setRememberUserAndPassword(rememberedUserName != null && rememberedUserName.length() > 0);
+            
+            actionForm.setModel(loginSession);
+        }
+    }
+    
+    private void loadChangePassword(U user){
+        if(user != null && user.getId() != null && user.getId() > 0 && user.isActive() != null && user.isActive()){
+            user.setPassword(null);
+            user.setNewPassword(null);
+            user.setConfirmPassword(null);
+    
+            LP loginParameter = user.getLoginParameter();
+    
+            if(loginParameter != null && (loginParameter.changePassword() == null || !loginParameter.changePassword())){
+                loginParameter.setChangePassword(true);
         
-        if(loginSession == null)
-            return;
-        
-        U user = loginSession.getUser();
-        String rememberedUserName = securityController.getRememberedUserName();
-        String rememberedPassword = securityController.getRememberedPassword();
-        
-        user.setName(rememberedUserName);
-        user.setPassword(rememberedPassword);
-        
-        loginSession.setRememberUserAndPassword(rememberedUserName != null && rememberedUserName.length() > 0);
+                user.setLoginParameter(loginParameter);
+            }
+        }
     }
     
     /**
@@ -158,27 +173,7 @@ public abstract class LoginSessionAction<L extends LoginSessionModel, U extends 
         L loginSession = (actionForm != null ? actionForm.getModel() : null);
         U user = (loginSession != null ? loginSession.getUser() : null);
         
-        if(user == null || user.getId() == null || user.getId() == 0){
-            init();
-            
-            throw new LoginSessionExpiredException();
-        }
-        
-        user.setPassword(null);
-        user.setNewPassword(null);
-        user.setConfirmPassword(null);
-        
-        LP loginParameter = user.getLoginParameter();
-        
-        if(loginParameter != null){
-            loginParameter.setChangePassword(true);
-            
-            user.setLoginParameter(loginParameter);
-            
-            loginSession.setUser(user);
-        }
-        
-        actionForm.setModel(loginSession);
+        loadChangePassword(user);
     }
     
     /**
@@ -264,24 +259,13 @@ public abstract class LoginSessionAction<L extends LoginSessionModel, U extends 
         BaseActionForm<L> actionForm = getActionForm();
         L loginSession = (actionForm != null ? actionForm.getModel() : null);
         U user = (loginSession != null ? loginSession.getUser() : null);
+        LP loginParameter = (user != null ? user.getLoginParameter() : null);
         
-        if(user == null || user.getId() == null || user.getId() == 0){
-            init();
-            
-            throw new LoginSessionExpiredException();
-        }
-        
-        LP loginParameter = user.getLoginParameter();
-        
-        if(loginParameter != null){
+        if(loginParameter != null && loginParameter.changePassword() != null && loginParameter.changePassword()){
             loginParameter.setChangePassword(false);
             
             user.setLoginParameter(loginParameter);
-            
-            loginSession.setUser(user);
         }
-        
-        actionForm.setModel(loginSession);
     }
     
     /**

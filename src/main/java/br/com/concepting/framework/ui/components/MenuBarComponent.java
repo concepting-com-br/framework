@@ -1,12 +1,11 @@
 package br.com.concepting.framework.ui.components;
 
 import br.com.concepting.framework.constants.Constants;
+import br.com.concepting.framework.controller.form.ActionFormController;
+import br.com.concepting.framework.controller.form.BaseActionForm;
 import br.com.concepting.framework.controller.form.util.ActionFormUtil;
 import br.com.concepting.framework.exceptions.InternalErrorException;
-import br.com.concepting.framework.model.FormModel;
-import br.com.concepting.framework.model.MainConsoleModel;
-import br.com.concepting.framework.model.ObjectModel;
-import br.com.concepting.framework.model.SystemModuleModel;
+import br.com.concepting.framework.model.*;
 import br.com.concepting.framework.model.util.ModelUtil;
 import br.com.concepting.framework.resources.PropertiesResources;
 import br.com.concepting.framework.security.controller.SecurityController;
@@ -18,6 +17,7 @@ import br.com.concepting.framework.util.types.ComponentType;
 
 import javax.servlet.jsp.JspException;
 import javax.ws.rs.HttpMethod;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -95,27 +95,15 @@ public class MenuBarComponent extends BaseActionFormComponent{
     /**
      * Loads the menu items.
      *
-     * @param <C> Class that define the list of menu items.
      * @return Instance that contains the list of menu items.
      * @throws InternalErrorException Occurs when was not possible to execute
      * the operation.
      */
-    @SuppressWarnings("unchecked")
-    protected <C extends List<? extends ObjectModel>> C lookupMenuItems() throws InternalErrorException{
-        SecurityController securityController = getSecurityController();
-        String actionFormName = getActionFormName();
-        C objects = null;
-        
-        if(actionFormName != null && actionFormName.length() > 0 && securityController != null){
-            LoginSessionModel loginSession = securityController.getLoginSession();
-            SystemModuleModel systemModule = (loginSession != null ? loginSession.getSystemModule() : null);
-            FormModel form = (systemModule != null ? systemModule.getForm(actionFormName) : null);
-            
-            if(form != null)
-                objects = (C) form.getObjects();
-        }
-        
-        return objects;
+    protected Collection<? extends ObjectModel> lookupMenuItems() throws InternalErrorException{
+        ActionFormController actionFormController = getActionFormController();
+        BaseActionForm<? extends BaseModel> actionForm = actionFormController.getActionFormInstance();
+
+        return (actionForm != null ? actionForm.getObjects() : null);
     }
     
     /**
@@ -157,7 +145,7 @@ public class MenuBarComponent extends BaseActionFormComponent{
      * @throws InternalErrorException Occurs when was not possible to render.
      */
     protected void renderMenuItems() throws InternalErrorException{
-        List<? extends ObjectModel> menuItems = lookupMenuItems();
+        Collection<? extends ObjectModel> menuItems = lookupMenuItems();
         
         if(menuItems != null && menuItems.size() > 0)
             renderMenuItems(menuItems, null);
@@ -170,14 +158,14 @@ public class MenuBarComponent extends BaseActionFormComponent{
      * @param parentMenu Instance that contains the parent menu item.
      * @throws InternalErrorException Occurs when was not possible to render.
      */
-    private void renderMenuItems(List<? extends ObjectModel> menuItems, ObjectModel parentMenu) throws InternalErrorException{
+    private void renderMenuItems(Collection<? extends ObjectModel> menuItems, ObjectModel parentMenu) throws InternalErrorException{
         String contextPath = getContextPath();
         SecurityController securityController = getSecurityController();
         
         if(menuItems == null || menuItems.size() == 0 || contextPath == null || contextPath.length() == 0 || securityController == null)
             return;
         
-        ModelUtil.sort(menuItems, Constants.SEQUENCE_ATTRIBUTE_ID);
+        ModelUtil.sort((List<? extends ObjectModel>)menuItems, Constants.SEQUENCE_ATTRIBUTE_ID);
         
         print("<table class=\"");
         
